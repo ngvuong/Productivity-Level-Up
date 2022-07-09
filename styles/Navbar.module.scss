@@ -1,0 +1,26 @@
+.navbar {
+  position: fixed;
+  top: 2rem;
+  bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background-color: var(--color-nav);
+  padding: 0.5rem 1rem;
+  outline: 0.2rem solid var(--color-alt-4);
+  border-radius: 1rem;
+
+  a,
+  button {
+    display: flex;
+    height: fit-content;
+    font-size: 2.5rem;
+    color: var(--color-secondary);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+
+    &:hover {
+      background-color: var(--color-hover);
+    }
+  }
+}
