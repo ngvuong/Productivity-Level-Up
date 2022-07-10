@@ -4,7 +4,8 @@ import {
   RiHome4Fill,
   RiTimerFill,
   RiPlantFill,
-  RiBarChartFill,
+  RiCalendarTodoFill,
+  RiNumbersFill,
   RiSettings5Fill,
   RiLogoutBoxFill,
 } from 'react-icons/ri';
@@ -29,9 +30,14 @@ export default function Navbar() {
             <RiPlantFill />
           </a>
         </Link>
+        <Link href='/tasks'>
+          <a>
+            <RiCalendarTodoFill />
+          </a>
+        </Link>
         <Link href='/stats'>
           <a>
-            <RiBarChartFill />
+            <RiNumbersFill />
           </a>
         </Link>
         <Link href='/settings'>
