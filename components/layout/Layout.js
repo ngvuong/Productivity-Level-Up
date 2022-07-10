@@ -18,8 +18,8 @@ export default function Layout({ children }) {
         />
         <link rel='icon' href='/favicon.ico' />
       </Head>
-      <Navbar />
       <div className={styles.container}>{children}</div>
+      <Navbar />
     </>
   );
 }
