@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
 import styles from '../../styles/Task.module.scss';
 
@@ -13,11 +14,8 @@ export default function Task({ task }) {
       </label>
       <div className={styles.taskBar}>
         <span className={done ? styles.done : ''}>{task.name}</span>
-        <div
-          className={styles.taskBarFill}
-          style={{ width: done ? '100%' : 0 }}
-        />
-        {done && <FaCheckDouble className={styles.done} />}
+        <div className={`${styles.taskBarFill} ${done ? styles.full : ''}`} />
+        {done && <FaCheckDouble />}
       </div>
     </div>
   );
