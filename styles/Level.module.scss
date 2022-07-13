@@ -4,9 +4,19 @@
   gap: 1rem;
   font-style: italic;
 
-  .level {
-    color: var(--color-primary);
-    font-size: 3rem;
+  .wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+
+    .level {
+      color: var(--color-secondary);
+      font-size: 3rem;
+    }
+
+    .streak {
+      font-size: 1.3rem;
+    }
   }
 
   .exp {
@@ -66,7 +76,6 @@
       &:hover {
         visibility: visible;
         opacity: 1;
-        cursor: default;
       }
     }
   }
