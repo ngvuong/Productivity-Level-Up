@@ -1,16 +1,20 @@
-import { useState } from 'react';
-
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
 import styles from '../../styles/Task.module.scss';
 
-export default function Task({ task }) {
-  const [done, setDone] = useState(false);
+export default function Task({ task, markTask }) {
+  const done = task.completed;
 
   return (
     <div className={styles.task}>
       <label>
         {done ? <FaRegCheckSquare /> : <FaRegSquare />}
-        <input type='checkbox' onChange={(e) => setDone(e.target.checked)} />
+        <input
+          type='checkbox'
+          checked={done}
+          onChange={() => {
+            markTask(task);
+          }}
+        />
       </label>
       <div className={styles.taskBar}>
         <span className={done ? styles.done : ''}>{task.name}</span>
