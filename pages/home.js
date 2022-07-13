@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Level from '../components/ui/Level';
-
-import { FaUser, FaRegSquare, FaCheckDouble } from 'react-icons/fa';
-import styles from '../styles/Home.module.scss';
 import Task from '../components/main/Task';
 
-export default function Home() {
-  const [val, setVal] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
+import { FaUser } from 'react-icons/fa';
+import styles from '../styles/Home.module.scss';
 
-  const onChange = (e) => {
-    const positionX = e.touches ? e.touches[0].clientX : e.clientX;
-    const left = e.target.getBoundingClientRect().left;
-    const fillWidth = positionX - left;
-    setVal(fillWidth);
+export default function Home() {
+  const [tasks, setTasks] = useState([
+    { name: 'Task 1', completed: false },
+    { name: 'Task 2', completed: true },
+    { name: 'Task 3', completed: false },
+  ]);
+  console.log(tasks);
+
+  const markTask = (task) => {
+    setTasks(
+      tasks.map((t) => {
+        if (t.name === task.name) {
+          return { ...t, completed: !t.completed };
+        }
+        return t;
+      })
+    );
   };
 
   return (
@@ -43,7 +51,9 @@ export default function Home() {
         </div>
         <h3>Tasks</h3>
         <div className={styles.tasks}>
-          <Task task={{ name: 'Task 1' }} />
+          {tasks.map((task) => (
+            <Task key={task.name} task={task} markTask={markTask} />
+          ))}
         </div>
       </section>
     </main>
