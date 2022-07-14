@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(cuid())
+  name     String?
+  email    String?   @unique
+  level    Int       @default(1)
+  exp      Int       @default(0)
+  expNext  Int       @default(20)
+  streak   Int       @default(0)
+  projects Project[]
+  tasks    Task[]
+
+  @@map(name: "users")
+}
+
+model Session {
+  id String @id @default(cuid())
+
+}
+
+model Project {
+  id    String @id @default(cuid())
+  users User[]
+
+}
+
+model Task {
+  id    String @id @default(cuid())
+  users User[]
+}
+
+model Tag {
+  id String @id @default(cuid())
+}
+
+model Level {
+  level       Int @unique
+  expRequired Int @default(20)
+  expNext     Int
+}
