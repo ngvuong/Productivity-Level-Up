@@ -12,7 +12,8 @@ export default function Home() {
     { name: 'Task 2', completed: true },
     { name: 'Task 3', completed: false },
   ]);
-  console.log(tasks);
+
+  const completedTaskCount = tasks.filter((task) => task.completed).length;
 
   const markTask = (task) => {
     setTasks(
@@ -39,13 +40,15 @@ export default function Home() {
             </a>
           </Link>
         </div>
-        <Level />
+        <Level user={{ level: 1, exp: 50, expNext: 103, streak: 5 }} />
       </header>
       <section className={styles.overview}>
         <h2>Today</h2>
         <div className={styles.stats}>
           <div>8 Sessions Completed</div>
-          <div>5 Tasks Completed</div>
+          <div>{`${completedTaskCount} Task${
+            completedTaskCount !== 1 ? 's' : ''
+          } Completed`}</div>
           <div>100 Exp Gained</div>
           <div>360 Minutes Logged</div>
         </div>
