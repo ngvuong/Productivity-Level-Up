@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import Head from 'next/head';
 import Login from '../components/auth/Login';
+import Register from '../components/auth/Register';
 
 import styles from '../styles/Welcome.module.scss';
 
 export default function Welcome() {
+  const [isLogin, setIsLogin] = useState(true);
+
   return (
     <main className={styles.welcome}>
       <Head>
@@ -27,7 +31,11 @@ export default function Welcome() {
           tracking. Tend to your garden and grow your plum trees.
         </p>
       </section>
-      <Login />
+      {isLogin ? (
+        <Login setIsLogin={setIsLogin} />
+      ) : (
+        <Register setIsLogin={setIsLogin} />
+      )}
     </main>
   );
 }
