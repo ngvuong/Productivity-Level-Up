@@ -1,10 +1,11 @@
 import Head from 'next/head';
+import Login from '../components/auth/Login';
 
 import styles from '../styles/Welcome.module.scss';
 
 export default function Welcome() {
   return (
-    <div className={styles.welcome}>
+    <main className={styles.welcome}>
       <Head>
         <title>Plum Tracker</title>
         <meta
@@ -17,6 +18,16 @@ export default function Welcome() {
         />
         <link rel='icon' href='/favicon.ico' />
       </Head>
-    </div>
+
+      <section className={styles.intro}>
+        <h1>Plum</h1>
+        <h2>Productivity Level Up Mate</h2>
+        <p>
+          Level up your productivity game today with time and experience
+          tracking. Tend to your garden and grow your plum trees.
+        </p>
+      </section>
+      <Login />
+    </main>
   );
 }
