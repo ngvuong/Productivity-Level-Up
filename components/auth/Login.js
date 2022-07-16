@@ -11,7 +11,11 @@ export default function Login({ setIsLogin }) {
   return (
     <div className={styles.login}>
       <h2>Log In</h2>
-      <hr />
+      <span>
+        <hr />
+        With
+        <hr />
+      </span>
       <div className={styles.loginBtns}>
         <button className={styles.github}>
           <FaGithub />
