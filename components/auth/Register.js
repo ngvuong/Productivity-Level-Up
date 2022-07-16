@@ -5,7 +5,11 @@ export default function Register({ setIsLogin }) {
   return (
     <div className={styles.register}>
       <h2>Sign Up</h2>
-      <hr />
+      <span>
+        <hr />
+        With
+        <hr />
+      </span>
       <div className={styles.loginBtns}>
         <button className={styles.github}>
           <FaGithub />
