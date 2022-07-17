@@ -58,6 +58,9 @@ export default function Home() {
             <Task key={task.name} task={task} markTask={markTask} />
           ))}
         </div>
+        <Link href='/timer'>
+          <a className={styles.track}>Start Session</a>
+        </Link>
       </section>
     </main>
   );
