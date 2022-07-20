@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Clock from '../components/ui/Clock';
 
 import { RiTimerFlashLine } from 'react-icons/ri';
@@ -9,8 +9,8 @@ export default function Timer() {
   const [breakDuration, setBreakDuration] = useState(1);
   const [run, setRun] = useState(false);
   const [done, setDone] = useState(false);
-  const [autostart, setAutostart] = useState(false);
-  console.log(done);
+  const [playSound, setPlaySound] = useState(true);
+  const autostart = useRef(null);
 
   useEffect(() => {
     if (done) {
@@ -20,22 +20,25 @@ export default function Timer() {
     }
   }, [done]);
 
-  const onDone = () => {
+  const onDone = useCallback(() => {
     setDone(true);
-    if (!autostart) setRun(false);
-  };
+    if (!autostart.current.checked) setRun(false);
+  }, []);
 
   return (
     <main className={styles.timer}>
-      <h1 className={done ? styles.done : undefined}>
-        <RiTimerFlashLine />
-      </h1>
-      <Clock
-        duration={duration}
-        breakDuration={breakDuration}
-        run={run}
-        onDone={onDone}
-      />
+      <section className={styles.time}>
+        <h1 className={done ? styles.done : undefined}>
+          <RiTimerFlashLine />
+        </h1>
+        <Clock
+          duration={duration}
+          breakDuration={breakDuration}
+          run={run}
+          onDone={onDone}
+          playSound={playSound}
+        />
+      </section>
       <section className={styles.configs}>
         <div>
           <label htmlFor='time'>Duration</label>
@@ -80,15 +83,21 @@ export default function Timer() {
         </div>
         <div>
           <label htmlFor='autostart'>Auto start</label>
+          <input type='checkbox' id='autostart' ref={autostart} />
+          <label htmlFor='autostart' />
+        </div>
+        <div>
+          <label htmlFor='sound'>Play sound</label>
           <input
             type='checkbox'
-            id='autostart'
-            value={autostart}
-            onChange={(e) => setAutostart(e.target.checked)}
+            id='sound'
+            checked={playSound}
+            onChange={(e) => setPlaySound(e.target.checked)}
           />
+          <label htmlFor='sound' />
         </div>
-        <button onClick={() => setRun(!run)}>{run ? 'Pause' : 'Start'}</button>
       </section>
+      <button onClick={() => setRun(!run)}>{run ? 'Pause' : 'Start'}</button>
     </main>
   );
 }
