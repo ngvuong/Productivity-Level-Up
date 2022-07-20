@@ -2,16 +2,27 @@ import { useEffect, useRef, useState } from 'react';
 
 import styles from '../../styles/Clock.module.scss';
 
-export default function Clock({ duration, breakDuration, run, onDone }) {
+export default function Clock({
+  duration,
+  breakDuration,
+  run,
+  onDone,
+  playSound,
+}) {
   const [time, setTime] = useState(duration * 60);
-  const [alarm, setAlarm] = useState(null);
-  const [tick, setTick] = useState(null);
+  const alarm = useRef(null);
+  const tick = useRef(null);
   const count = useRef(null);
 
   useEffect(() => {
-    setAlarm(new Audio('./alarm.wav'));
-    setTick(new Audio('./tock.mp3'));
-  }, []);
+    if (playSound) {
+      alarm.current = new Audio('./alarm.wav');
+      tick.current = new Audio('./tock.mp3');
+    } else {
+      alarm.current = null;
+      tick.current = null;
+    }
+  }, [playSound]);
 
   useEffect(() => {
     setTime(duration * 60);
@@ -20,13 +31,14 @@ export default function Clock({ duration, breakDuration, run, onDone }) {
   useEffect(() => {
     if (run && time > 0) {
       const interval = setInterval(() => {
-        tick.play();
+        if (tick.current) tick.current.play();
+
         setTime(time - 1);
       }, 1000);
 
       return () => clearInterval(interval);
     } else if (time === 0) {
-      alarm.play();
+      if (alarm.current) alarm.current.play();
       onDone();
       count.current = breakDuration > 0 ? ++count.current : 0;
       if (count.current % 2 === 0) {
@@ -35,7 +47,7 @@ export default function Clock({ duration, breakDuration, run, onDone }) {
         setTime(breakDuration * 60);
       }
     }
-  }, [run, time, breakDuration, duration, onDone, alarm, tick]);
+  }, [run, time, breakDuration, duration, onDone]);
 
   return (
     <div className={styles.clock}>
