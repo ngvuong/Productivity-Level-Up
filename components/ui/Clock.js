@@ -1,60 +1,63 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { RiTimerFlashLine } from 'react-icons/ri';
 import styles from '../../styles/Clock.module.scss';
 
-export default function Clock({
-  duration,
-  breakDuration,
-  run,
-  onDone,
-  playSound,
-}) {
-  const [time, setTime] = useState(duration * 60);
+export default function Clock({ time, run, onDone, soundEffects }) {
+  const [seconds, setSeconds] = useState(time);
   const alarm = useRef(null);
   const tick = useRef(null);
-  const count = useRef(null);
 
   useEffect(() => {
-    if (playSound) {
+    if (soundEffects.notification) {
       alarm.current = new Audio('./alarm.wav');
+    } else alarm.current = null;
+
+    if (soundEffects.ticking) {
       tick.current = new Audio('./tock.mp3');
-    } else {
-      alarm.current = null;
-      tick.current = null;
-    }
-  }, [playSound]);
+    } else tick.current = null;
+  }, [soundEffects]);
 
   useEffect(() => {
-    setTime(duration * 60);
-  }, [duration]);
+    setSeconds(time);
+  }, [time]);
 
   useEffect(() => {
-    if (run && time > 0) {
+    if (run && seconds > 0) {
       const interval = setInterval(() => {
         if (tick.current) tick.current.play();
 
-        setTime(time - 1);
+        setSeconds(seconds - 1);
       }, 1000);
 
       return () => clearInterval(interval);
-    } else if (time === 0) {
+    } else if (run && seconds === 0) {
       if (alarm.current) alarm.current.play();
-      onDone();
-      count.current = breakDuration > 0 ? ++count.current : 0;
-      if (count.current % 2 === 0) {
-        setTime(duration * 60);
-      } else {
-        setTime(breakDuration * 60);
-      }
+      const timeout = setTimeout(() => {
+        onDone();
+        setSeconds(time);
+      }, 1000);
+
+      return () => clearTimeout(timeout);
     }
-  }, [run, time, breakDuration, duration, onDone]);
+  }, [time, run, seconds, onDone]);
 
   return (
     <div className={styles.clock}>
-      {`${Math.floor(time / 60).toLocaleString('en-US', {
+      <div className={seconds === 0 ? styles.done : undefined}>
+        <RiTimerFlashLine />
+        <div
+          className={styles.fill}
+          style={{
+            width: `${(seconds / time) * 58.5}%`,
+            height: `${(seconds / time) * 58.5}%`,
+          }}
+        ></div>
+      </div>
+      {`${Math.floor(seconds / 60).toLocaleString('en-US', {
         minimumIntegerDigits: 2,
         useGroup: false,
-      })}:${(time % 60).toLocaleString('en-US', {
+      })}:${(seconds % 60).toLocaleString('en-US', {
         minimumIntegerDigits: 2,
         useGroup: false,
       })}`}
