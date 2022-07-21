@@ -1,44 +1,39 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Clock from '../components/ui/Clock';
 
-import { RiTimerFlashLine } from 'react-icons/ri';
 import styles from '../styles/Timer.module.scss';
 
 export default function Timer() {
-  const [duration, setDuration] = useState(0.5);
+  const [duration, setDuration] = useState(0.1);
   const [breakDuration, setBreakDuration] = useState(1);
+  const [time, setTime] = useState(duration * 60);
   const [run, setRun] = useState(false);
-  const [done, setDone] = useState(false);
-  const [playSound, setPlaySound] = useState(true);
+  const [soundEffects, setSoundEffects] = useState({
+    notification: true,
+    ticking: true,
+  });
   const autostart = useRef(null);
-
-  useEffect(() => {
-    if (done) {
-      const timeout = setTimeout(() => setDone(false), 2000);
-
-      return () => clearTimeout(timeout);
-    }
-  }, [done]);
+  const count = useRef(null);
 
   const onDone = useCallback(() => {
-    setDone(true);
     if (!autostart.current.checked) setRun(false);
-  }, []);
+
+    count.current = breakDuration ? ++count.current : 0;
+    if (count.current % 2 === 0) {
+      setTime(duration * 60);
+    } else {
+      setTime(breakDuration * 60);
+    }
+  }, [duration, breakDuration]);
 
   return (
     <main className={styles.timer}>
-      <section className={styles.time}>
-        <h1 className={done ? styles.done : undefined}>
-          <RiTimerFlashLine />
-        </h1>
-        <Clock
-          duration={duration}
-          breakDuration={breakDuration}
-          run={run}
-          onDone={onDone}
-          playSound={playSound}
-        />
-      </section>
+      <Clock
+        time={time}
+        run={run}
+        onDone={onDone}
+        soundEffects={soundEffects}
+      />
       <section className={styles.configs}>
         <div>
           <label htmlFor='time'>Duration</label>
@@ -46,7 +41,11 @@ export default function Timer() {
             name='time'
             id='time'
             value={duration}
-            onChange={(e) => setDuration(e.target.value)}
+            onChange={(e) => {
+              const minutes = parseInt(e.target.value);
+              setDuration(minutes);
+              setTime(minutes * 60);
+            }}
           >
             <option value='5'>5 minutes</option>
             <option value='10'>10 minutes</option>
@@ -71,7 +70,7 @@ export default function Timer() {
             value={breakDuration}
             onChange={(e) => setBreakDuration(e.target.value)}
           >
-            <option value='0'>No break</option>
+            <option value=''>No break</option>
             <option value='1'>1 minute</option>
             <option value='2'>2 minutes</option>
             <option value='3'>3 minutes</option>
@@ -87,14 +86,31 @@ export default function Timer() {
           <label htmlFor='autostart' />
         </div>
         <div>
-          <label htmlFor='sound'>Play sound</label>
+          <label htmlFor='notificationSound'>Notification</label>
           <input
             type='checkbox'
-            id='sound'
-            checked={playSound}
-            onChange={(e) => setPlaySound(e.target.checked)}
+            id='notificationSound'
+            checked={soundEffects.notification}
+            onChange={(e) =>
+              setSoundEffects({
+                ...soundEffects,
+                notification: e.target.checked,
+              })
+            }
           />
-          <label htmlFor='sound' />
+          <label htmlFor='notificationSound' />
+        </div>
+        <div>
+          <label htmlFor='tickingSound'>Ticking</label>
+          <input
+            type='checkbox'
+            id='tickingSound'
+            checked={soundEffects.ticking}
+            onChange={(e) =>
+              setSoundEffects({ ...soundEffects, ticking: e.target.checked })
+            }
+          />
+          <label htmlFor='tickingSound' />
         </div>
       </section>
       <button onClick={() => setRun(!run)}>{run ? 'Pause' : 'Start'}</button>
