@@ -1,3 +1,5 @@
+import { signIn } from 'next-auth/react';
+
 import {
   FaGithub,
   FaGoogle,
@@ -17,15 +19,15 @@ export default function Login({ setIsLogin }) {
         <hr />
       </span>
       <div className={styles.loginBtns}>
-        <button className={styles.github}>
+        <button className={styles.github} onClick={() => signIn('github')}>
           <FaGithub />
           GitHub
         </button>
-        <button className={styles.google}>
+        <button className={styles.google} onClick={() => signIn('google')}>
           <FaGoogle />
           Google
         </button>
-        <button className={styles.facebook}>
+        <button className={styles.facebook} onClick={() => signIn('facebook')}>
           <FaFacebook />
           Facebook
         </button>
