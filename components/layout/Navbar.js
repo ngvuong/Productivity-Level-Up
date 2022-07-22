@@ -1,3 +1,4 @@
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 
 import {
@@ -45,7 +46,7 @@ export default function Navbar() {
             <RiSettings5Fill />
           </a>
         </Link>
-        <button>
+        <button onClick={signOut}>
           <RiLogoutBoxFill />
         </button>
       </nav>
