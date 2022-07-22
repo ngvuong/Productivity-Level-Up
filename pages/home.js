@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Level from '../components/ui/Level';
 import Task from '../components/main/Task';
 
 import { FaUser } from 'react-icons/fa';
 import styles from '../styles/Home.module.scss';
 
-export default function Home() {
+export default function Home({ user }) {
   const [tasks, setTasks] = useState([
     { name: 'Task 1', completed: false },
     { name: 'Task 2', completed: true },
     { name: 'Task 3', completed: false },
   ]);
-
   const completedTaskCount = tasks.filter((task) => task.completed).length;
 
   const markTask = (task) => {
@@ -36,7 +36,17 @@ export default function Home() {
           </div>
           <Link href='/tasks'>
             <a className={styles.user}>
-              <FaUser /> Vuong Nguyen
+              {user.image ? (
+                <Image
+                  src={user.image}
+                  width='20'
+                  height='20'
+                  alt='Profile avatar'
+                />
+              ) : (
+                <FaUser />
+              )}
+              {user.name || user.email}
             </a>
           </Link>
         </div>
