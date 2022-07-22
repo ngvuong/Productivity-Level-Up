@@ -46,13 +46,14 @@ export default function Clock({ time, run, onDone, soundEffects }) {
     <div className={styles.clock}>
       <div className={seconds === 0 ? styles.done : undefined}>
         <RiTimerFlashLine />
-        <div
-          className={styles.fill}
-          style={{
-            width: `${(seconds / time) * 58.5}%`,
-            height: `${(seconds / time) * 58.5}%`,
-          }}
-        ></div>
+        <div className={styles.fill}>
+          <style jsx>{`
+            div {
+              width: ${(seconds / time) * 58.5}%;
+              height: ${(seconds / time) * 58.5}%;
+            }
+          `}</style>
+        </div>
       </div>
       {`${Math.floor(seconds / 60).toLocaleString('en-US', {
         minimumIntegerDigits: 2,
