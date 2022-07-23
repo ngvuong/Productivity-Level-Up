@@ -1,6 +1,7 @@
 import { useEffect, cloneElement } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Spinner from './Spinner';
 import Navbar from '../ui/Navbar';
 import { useUser } from '../../contexts/userContext';
 
@@ -17,7 +18,7 @@ export default function Layout({ children }) {
   }, [status]);
 
   if (status === 'loading') {
-    return <div>Loading...</div>;
+    return <Spinner />;
   }
 
   return (
@@ -36,6 +37,8 @@ export default function Layout({ children }) {
       </Head>
 
       <div className={styles.container}>
+        <Spinner />
+
         {router.pathname !== '/'
           ? user && cloneElement(children, { user })
           : cloneElement(children, { user })}
