@@ -5,62 +5,6 @@
   align-items: center;
   gap: 2rem;
 
-  .time {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    h1 {
-      display: flex;
-      color: var(--color-secondary);
-      font-size: 20rem;
-
-      &.done {
-        animation: shake 1s linear;
-
-        @keyframes shake {
-          5% {
-            transform: rotate(-10deg) scale(1.2);
-          }
-
-          12.5% {
-            transform: scale(1);
-          }
-
-          25% {
-            transform: rotate(10deg) scale(1.2);
-            color: var(--color-primary);
-          }
-
-          37.5% {
-            transform: scale(1);
-          }
-
-          50% {
-            transform: rotate(-10deg) scale(1.2);
-          }
-
-          62.5% {
-            transform: scale(1);
-          }
-
-          75% {
-            transform: rotate(10deg) scale(1.2);
-            color: var(--color-secondary);
-          }
-
-          87.5% {
-            transform: scale(1);
-          }
-
-          100% {
-            transform: rotate(0deg);
-          }
-        }
-      }
-    }
-  }
-
   .configs {
     display: flex;
     gap: 1rem;
@@ -81,15 +25,23 @@
         color: var(--color-secondary);
         background: var(--color-button-2);
         padding-left: 0.4rem;
-        border: 1px solid var(--color-secondary);
+        border: 1px solid;
         border-radius: 0.5rem;
         cursor: pointer;
         user-select: none;
+
+        &::after {
+          content: '✘';
+        }
       }
 
       &:checked + label {
         background: var(--color-button-4);
         padding-left: 0.2rem;
+
+        &::after {
+          content: '✔';
+        }
       }
     }
   }
