@@ -13,13 +13,15 @@ export default function Level({ user }) {
       </div>
       <div className={styles.exp}>
         <div className={styles.expBar}>
-          <div
-            className={styles.expBarFill}
-            style={{
-              width: `${percent}%`,
-              borderRadius: `${percent >= 100 ? '1rem' : '1rem 0 0 1rem'}`,
-            }}
-          />
+          <div className={styles.expBarFill}>
+            <style jsx>{`
+              div {
+                width: ${percent}%;
+                border: ${percent === 0 ? 'none' : '.1rem solid #c1a'};
+                border-radius: ${percent >= 100 ? '1rem' : '1rem 0 0 1rem'};
+              }
+            `}</style>
+          </div>
           <span></span>
           <span></span>
           <span></span>
