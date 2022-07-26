@@ -1,6 +1,7 @@
 import { useEffect, cloneElement } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Overlay from './Overlay';
 import Spinner from './Spinner';
 import Navbar from '../ui/Navbar';
 import { useUser } from '../../contexts/userContext';
@@ -15,10 +16,18 @@ export default function Layout({ children }) {
     if (status === 'unauthenticated' && router.pathname !== '/') {
       router.replace('/');
     }
+
+    if (status === 'authenticated' && router.pathname === '/') {
+      router.replace('/home');
+    }
   }, [status]);
 
   if (status === 'loading') {
-    return <Spinner />;
+    return (
+      <Overlay>
+        <Spinner />
+      </Overlay>
+    );
   }
 
   return (
@@ -37,11 +46,9 @@ export default function Layout({ children }) {
       </Head>
 
       <div className={styles.container}>
-        <Spinner />
-
         {router.pathname !== '/'
           ? user && cloneElement(children, { user })
-          : cloneElement(children, { user })}
+          : status === 'unauthenticated' && children}
       </div>
       {user && <Navbar />}
     </>
