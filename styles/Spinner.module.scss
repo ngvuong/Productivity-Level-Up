@@ -3,18 +3,16 @@
   top: 50%;
   left: 50%;
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
+  transform: translate(-50%, -50%);
 
   div {
-    width: 1rem;
-    height: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 50%;
     background-color: var(--color-accent);
     animation: pulse 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 
-    &:nth-child(1) {
-      animation-delay: 0s;
-    }
     &:nth-child(2) {
       animation-delay: 0.2s;
     }
@@ -27,10 +25,11 @@
   }
 
   @keyframes pulse {
-    50% {
+    10% {
       transform: scale(1.5);
+      box-shadow: 0 0 0.5rem var(--color-highlight);
     }
-    100% {
+    50% {
       transform: scale(1);
     }
   }
