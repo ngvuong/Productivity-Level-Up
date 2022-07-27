@@ -1,0 +1,59 @@
+.register {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 40vw;
+  background-color: var(--color-tertiary-2);
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1rem var(--color-shadow);
+
+  h2 {
+    align-self: center;
+    color: var(--color-tertiary-1);
+  }
+
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    border-radius: 1rem;
+  }
+
+  .loginBtns {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .github {
+      background-color: var(--color-button-1);
+    }
+
+    .google {
+      background-color: var(--color-button-2);
+    }
+
+    .facebook {
+      background-color: var(--color-button-3);
+    }
+  }
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-tertiary-1);
+    font-weight: bold;
+
+    hr {
+      flex: 1;
+    }
+  }
+
+  .login {
+    background-color: var(--color-button-4);
+  }
+}
