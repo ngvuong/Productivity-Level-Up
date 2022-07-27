@@ -6,6 +6,9 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import prisma from '../../../lib/prisma';
 
 export default NextAuth({
+  session: {
+    maxAge: 60 * 60 * 24, // 1 day
+  },
   adapter: PrismaAdapter(prisma),
   providers: [
     GitHubProvider({
@@ -21,4 +24,14 @@ export default NextAuth({
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
     }),
   ],
+  pages: {
+    signIn: '/',
+  },
+  callbacks: {
+    session: async ({ session, user }) => {
+      session.user = user;
+
+      return session;
+    },
+  },
 });
