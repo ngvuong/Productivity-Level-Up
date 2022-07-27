@@ -39,8 +39,9 @@ export default function Home({ user }) {
               {user.image ? (
                 <Image
                   src={user.image}
-                  width='20'
-                  height='20'
+                  width='35'
+                  height='35'
+                  className={styles.avatar}
                   alt='Profile avatar'
                 />
               ) : (
@@ -50,7 +51,7 @@ export default function Home({ user }) {
             </a>
           </Link>
         </div>
-        <Level user={{ level: 1, exp: 50, expNext: 103, streak: 5 }} />
+        <Level user={user} />
       </header>
       <section className={styles.overview}>
         <h2>Today</h2>
@@ -75,3 +76,18 @@ export default function Home({ user }) {
     </main>
   );
 }
+
+// export async function getServerSideProps(context) {
+//   const currentUser = await prisma.user.findMany({
+//     where: {
+//       name: 'Vuong Nguyen',
+//     },
+//   });
+//   console.log(currentUser);
+
+//   return {
+//     props: {
+//       currentUser,
+//     },
+//   };
+// }
