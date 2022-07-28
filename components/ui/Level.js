@@ -1,7 +1,9 @@
 import styles from '../../styles/Level.module.scss';
 
 export default function Level({ user }) {
-  const percent = +((user.exp / user.expNext) * 100).toFixed(2);
+  const percent = +((user.exp / (user.expMin + user.expToNext)) * 100).toFixed(
+    2
+  );
 
   return (
     <div className={styles.container}>
@@ -26,7 +28,9 @@ export default function Level({ user }) {
           <span></span>
           <span></span>
         </div>
-        <span>{`${user.exp}/${user.expNext} (${percent}%)`}</span>
+        <span>{`${user.exp}/${
+          user.expMin + user.expToNext
+        } (${percent}%)`}</span>
       </div>
     </div>
   );
