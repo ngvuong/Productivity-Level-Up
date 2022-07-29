@@ -20,7 +20,7 @@ export default function Layout({ children }) {
     if (status === 'authenticated' && router.pathname === '/') {
       router.replace('/home');
     }
-  }, [status]);
+  }, [status, router]);
 
   if (status === 'loading') {
     return (
