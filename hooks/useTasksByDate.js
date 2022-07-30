@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 
-export default function useTodayTasks(userId, date, options) {
+export default function useTasksByDate(userId, date, options) {
   const { data, error, mutate } = useSWR(
     `/api/user/${userId}/tasks/${date}`,
     options
