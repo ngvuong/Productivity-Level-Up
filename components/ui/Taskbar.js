@@ -1,15 +1,26 @@
 import { useEffect, useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
+
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
 import styles from '../../styles/Taskbar.module.scss';
 
 export default function Taskbar({ task, toggleDone, toggleDetails }) {
   const [done, setDone] = useState(task.completed);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => toggleDone(task.id, done), 600);
+  // useEffect(() => {
+  //   console.log('effect');
+  //   if (done !== task.completed) {
+  //     const timeout = setTimeout(() => toggleDone(task.id, done), 600);
+  //     console.log(timeout);
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [task.id, done, toggleDone]);
 
-    return () => clearTimeout(timeout);
-  }, [task.id, done, toggleDone]);
+  const debounced = useDebouncedCallback(() => {
+    if (done !== task.completed) {
+      toggleDone(task.id, done);
+    }
+  }, 600);
 
   return (
     <div className={styles.container} onClick={toggleDetails}>
@@ -18,16 +29,19 @@ export default function Taskbar({ task, toggleDone, toggleDetails }) {
         <input
           type='checkbox'
           checked={done}
-          onChange={(e) => setDone(e.target.checked)}
+          onChange={(e) => {
+            setDone(e.target.checked);
+            debounced();
+          }}
         />
       </label>
       <div
         className={styles.taskBar}
         style={{
           border: `3px solid ${
-            task.priority === 'LOW'
+            task.priority === 'P3'
               ? '#55ff00'
-              : task.priority === 'MEDIUM'
+              : task.priority === 'P2'
               ? '#0055ff'
               : '#ff0055'
           }`,
