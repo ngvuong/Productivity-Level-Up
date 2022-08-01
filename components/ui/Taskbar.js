@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
@@ -7,15 +7,6 @@ import styles from '../../styles/Taskbar.module.scss';
 export default function Taskbar({ task, toggleDone, toggleDetails }) {
   const [done, setDone] = useState(task.completed);
 
-  // useEffect(() => {
-  //   console.log('effect');
-  //   if (done !== task.completed) {
-  //     const timeout = setTimeout(() => toggleDone(task.id, done), 600);
-  //     console.log(timeout);
-  //     return () => clearTimeout(timeout);
-  //   }
-  // }, [task.id, done, toggleDone]);
-
   const debounced = useDebouncedCallback(() => {
     if (done !== task.completed) {
       toggleDone(task.id, done);
@@ -23,7 +14,7 @@ export default function Taskbar({ task, toggleDone, toggleDetails }) {
   }, 600);
 
   return (
-    <div className={styles.container} onClick={toggleDetails}>
+    <div className={styles.container}>
       <label>
         {done ? <FaRegCheckSquare /> : <FaRegSquare />}
         <input
@@ -37,6 +28,7 @@ export default function Taskbar({ task, toggleDone, toggleDetails }) {
       </label>
       <div
         className={styles.taskBar}
+        onClick={toggleDetails}
         style={{
           border: `3px solid ${
             task.priority === 'P3'
