@@ -5,7 +5,7 @@ import Select from 'react-select';
 const styles = {
   control: (styles) => ({
     ...styles,
-    backgroundColor: '#1f1f1f',
+    backgroundColor: '#151515',
     borderRadius: '1rem',
   }),
   menuList: (styles) => ({
@@ -20,20 +20,20 @@ const styles = {
 
     color:
       data.value === 'P3'
-        ? '#55ff00'
+        ? '#8f0'
         : data.value === 'P2'
-        ? '#0055ff'
+        ? '#08f'
         : data.value === 'P1'
-        ? '#ff0055'
+        ? '#f08'
         : '#c1a',
   }),
   multiValue: (styles) => ({
     ...styles,
-    backgroundColor: '#1f1f1f',
+    backgroundColor: '#151515',
   }),
   multiValueLabel: (styles) => ({
     ...styles,
-    backgroundColor: '#fc0',
+    backgroundColor: '#fc2',
   }),
   option: (styles, { isFocused, isSelected }) => ({
     ...styles,
