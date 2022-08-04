@@ -13,6 +13,10 @@ export default async function handler(req, res) {
         userId: userid,
         date,
       },
+      include: {
+        project: true,
+        tags: true,
+      },
       orderBy: [
         {
           completed: 'asc',
@@ -23,7 +27,6 @@ export default async function handler(req, res) {
       ],
     });
 
-    console.log(tasks);
     return res.status(200).json(tasks);
   } catch (err) {
     return res.status(500).json({ error: err.message });
