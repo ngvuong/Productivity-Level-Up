@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
 
@@ -53,6 +53,10 @@ export default function CustomSelect({
   const [selected, setSelected] = useState(defaultValue);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    setSelected(defaultValue);
+  }, [defaultValue]);
+
   const onCreateOption = async (value) => {
     setIsLoading(true);
     const newOption = await onCreateNew(value);
@@ -68,12 +72,12 @@ export default function CustomSelect({
 
   const onChange = (option) => {
     setSelected(option);
+
     if (multiple) {
       onInputChange({ name, value: option.map((o) => o.value) });
     } else {
-      onInputChange({ name, value: option.value });
+      onInputChange({ name, value: option?.value || null });
     }
-    console.log(option);
   };
 
   return (
