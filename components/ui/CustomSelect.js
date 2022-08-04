@@ -5,13 +5,15 @@ import Select from 'react-select';
 const styles = {
   control: (styles) => ({
     ...styles,
+    fontSize: '1.2rem',
     backgroundColor: '#151515',
     borderRadius: '1rem',
   }),
   menuList: (styles) => ({
     ...styles,
-    backgroundColor: '#1f1f1f',
+    fontSize: '1.2rem',
     maxHeight: '20rem',
+    backgroundColor: '#1f1f1f',
     overflow: 'auto',
   }),
   input: (styles) => ({ ...styles, color: '#dcd7de' }),
@@ -63,8 +65,13 @@ export default function CustomSelect({
 
     if (multiple) {
       setSelected([...selected, newOption]);
+      onInputChange({
+        name,
+        value: [...selected.map((s) => s.value), newOption.value],
+      });
     } else {
       setSelected(newOption);
+      onInputChange({ name, value: newOption.value });
     }
 
     setIsLoading(false);
