@@ -3,7 +3,6 @@ import { format, parseISO } from 'date-fns';
 import CustomSelect from '../ui/CustomSelect';
 import useProjects from '../../hooks/useProjects';
 import useTags from '../../hooks/useTags';
-import useTasksByDate from '../../hooks/useTasksByDate';
 
 import { FaEdit } from 'react-icons/fa';
 import styles from '../../styles/TaskCard.module.scss';
@@ -15,36 +14,16 @@ export default function TaskCard({
   taskDetails,
   setTaskDetails,
   onSave,
-  changed,
+  valid,
 }) {
   const [edit, setEdit] = useState(task ? false : true);
   const [projectOptions, setProjectOptions] = useState([]);
   const [tagOptions, setTagOptions] = useState([]);
-  const tagIds = task ? task.tags.map((tag) => tag.id) : undefined;
-  // const [taskDetails, setTaskDetails] = useState(
-  //   task
-  //     ? {
-  //         name: task.name,
-  //         project: task?.project?.id || null,
-  //         tags: tagIds,
-  //         priority: task.priority,
-  //         date: task.date,
-  //         notes: task.notes || '',
-  //       }
-  //     : {
-  //         name: '',
-  //         project: null,
-  //         tags: [],
-  //         priority: '',
-  //         date: '',
-  //         notes: '',
-  //       }
-  // );
+  const [defaultDetails, setDefaultDetails] = useState(taskDetails);
   const { projects, setProjects } = useProjects(userId, {
     revalidateOnMount: true,
   });
   const { tags, setTags } = useTags(userId, { revalidateOnMount: true });
-  const { setTasks } = useTasksByDate(userId, format(new Date(), 'yyyy-MM-dd'));
   const priorityOptions = [
     { label: 'Low', value: 'P3' },
     { label: 'Medium', value: 'P2' },
@@ -123,51 +102,6 @@ export default function TaskCard({
     setTaskDetails({ ...taskDetails, [target.name]: target.value });
   };
 
-  // const getChangedData = () => {
-  //   const { name, project, tags, priority, date, notes } = taskDetails;
-
-  //   const nameChanged = name !== task.name;
-  //   const projectChanged = task.project
-  //     ? project !== task.project.id
-  //     : project !== null;
-  //   const tagsChanged =
-  //     !tags.every((tag) => tagIds.includes(tag)) ||
-  //     !tagIds.every((id) => tags.includes(id));
-  //   const priorityChanged = priority !== task.priority;
-  //   const dateChanged = date !== task.date;
-  //   const notesChanged = notes !== task.notes;
-
-  //   const data = {
-  //     ...(nameChanged && { name }),
-  //     ...(projectChanged && { projectId: project }),
-  //     ...(tagsChanged && { tags }),
-  //     ...(priorityChanged && { priority }),
-  //     ...(dateChanged && { date }),
-  //     ...(notesChanged && { notes }),
-  //   };
-
-  //   return data;
-  // };
-
-  // const onSave = async () => {
-  //   const data = getChangedData();
-
-  //   if (!Object.keys(data).length) return;
-
-  //   const result = await fetch(`/api/tasks/${task.id}`, {
-  //     method: 'PUT',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({ data }),
-  //   }).then((res) => res.json());
-
-  //   if (result.error) return alert(result.error);
-
-  //   setEdit(false);
-  //   setTasks();
-  // };
-
   return (
     <div className={styles.taskCard}>
       <div
@@ -236,10 +170,10 @@ export default function TaskCard({
         <div className={`${task ? styles.cardBack : styles.cardFront}`}>
           <input
             type='text'
+            name='name'
             value={taskDetails.name}
-            onChange={(e) =>
-              onDetailChange({ name: 'name', value: e.target.value })
-            }
+            onChange={(e) => onDetailChange(e.target)}
+            placeholder='Task name'
           />
           <label>
             Project
@@ -286,29 +220,29 @@ export default function TaskCard({
             Date{' '}
             <input
               type='date'
-              value={taskDetails.date || format(new Date(), 'yyyy-MM-dd')}
-              onChange={(e) =>
-                onDetailChange({ name: 'date', value: e.target.value })
-              }
+              name='date'
+              value={taskDetails.date}
+              onChange={(e) => onDetailChange(e.target)}
             />
           </label>
           <label>
             Notes{' '}
             <input
               type='text'
+              name='notes'
               value={taskDetails.notes || ''}
-              onChange={(e) =>
-                onDetailChange({ name: 'notes', value: e.target.value })
-              }
+              onChange={(e) => onDetailChange(e.target)}
+              placeholder='Task notes'
             />
           </label>
           <button
             className={styles.btnSave}
-            onClick={() => {
-              onSave();
-              setEdit(false);
+            onClick={async () => {
+              await onSave();
+              setDefaultDetails(taskDetails);
+              task ? setEdit(false) : setShowCard(false);
             }}
-            disabled={task && !changed}
+            disabled={!valid}
           >
             Save
           </button>
@@ -316,57 +250,19 @@ export default function TaskCard({
             <button
               className={styles.btnEdit}
               onClick={() => {
-                if (task) {
-                  setEdit(!edit);
-                  setTaskDetails({
-                    name: task.name,
-                    project: task?.project?.id || null,
-                    tags: task ? task.tags.map((tag) => tag.id) : [],
-                    priority: task.priority,
-                    date: task.date,
-                    notes: task.notes || '',
-                  });
-                } else {
-                  setTaskDetails({
-                    name: '',
-                    project: null,
-                    tags: [],
-                    priority: '',
-                    date: '',
-                    notes: '',
-                  });
-                }
+                setEdit(!edit);
+                setTaskDetails(defaultDetails);
               }}
             >
               <FaEdit />
             </button>
           )}
-          {edit && (
+          {(edit || !task) && (
             <button
               className={styles.btnClose}
               onClick={() => {
                 setShowCard(false);
-
-                // if (task) {
-                //   setEdit(!edit);
-                //   setTaskDetails({
-                //     name:  task? task.name : '',
-                //     project: task? task?.project?.id || null : null,
-                //     tags: task ? task.tags.map((tag) => tag.id) : [],
-                //     priority: task ? task.priority : 'P3',
-                //     date: task ? task.date : '',
-                //     notes: task ? task.notes || '': '',
-                //   });
-                // } else {
-                //   setTaskDetails({
-                //     name: '',
-                //     project: null,
-                //     tags: [],
-                //     priority: '',
-                //     date: '',
-                //     notes: '',
-                //   });
-                // }
+                setTaskDetails(defaultDetails);
               }}
             >
               ✕
