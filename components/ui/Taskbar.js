@@ -32,10 +32,10 @@ export default function Taskbar({ task, toggleDone, toggleDetails }) {
         style={{
           border: `3px solid ${
             task.priority === 'P3'
-              ? '#55ff00'
+              ? '#8f0'
               : task.priority === 'P2'
-              ? '#0055ff'
-              : '#ff0055'
+              ? '#08f'
+              : '#f08'
           }`,
         }}
       >
