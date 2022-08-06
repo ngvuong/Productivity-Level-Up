@@ -1,4 +1,3 @@
-import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import Task from './Task';
@@ -17,21 +16,24 @@ export default function Overview({ userId }) {
   if (isLoading) {
     return <Spinner />;
   }
+
   const completedTaskCount = tasks.filter((task) => task.completed).length;
 
-  const toggleDone = async (id, done) => {
-    const data = await fetch(`/api/tasks/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ completed: done }),
-    }).then((res) => res.json());
+  // const toggleDone = async (id, done) => {
+  //   const data = { completed: done };
 
-    if (data.error) console.error(data.error);
+  //   const result = await fetch(`/api/tasks/${id}`, {
+  //     method: 'PUT',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({ data }),
+  //   }).then((res) => res.json());
 
-    setTasks();
-  };
+  //   if (result.error) console.error(result.error);
+
+  //   setTasks();
+  // };
 
   return (
     <section className={styles.overview}>
@@ -47,7 +49,7 @@ export default function Overview({ userId }) {
       <h3>Tasks</h3>
       <div className={styles.tasks}>
         {tasks.map((task) => (
-          <Task key={task.id} task={task} toggleDone={toggleDone} />
+          <Task key={task.id} task={task} userId={userId} setTasks={setTasks} />
         ))}
       </div>
       <Link href='/timer'>
