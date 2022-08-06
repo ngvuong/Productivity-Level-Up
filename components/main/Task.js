@@ -5,7 +5,7 @@ import TaskCard from '../ui/TaskCard';
 
 import styles from '../../styles/Task.module.scss';
 
-export default function Task({ task, userId, toggleDone, setTasks }) {
+export default function Task({ task, userId, setTasks }) {
   const [showCard, setShowCard] = useState(false);
   const tagIds = task.tags.map((tag) => tag.id);
   const [taskDetails, setTaskDetails] = useState({
@@ -16,6 +16,22 @@ export default function Task({ task, userId, toggleDone, setTasks }) {
     date: task.date,
     notes: task.notes || '',
   });
+
+  const toggleDone = async (id, done) => {
+    const data = { completed: done };
+
+    const result = await fetch(`/api/tasks/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ data }),
+    }).then((res) => res.json());
+
+    if (result.error) console.error(result.error);
+
+    setTasks();
+  };
 
   const getChangedData = () => {
     const { name, project, tags, priority, date, notes } = taskDetails;
