@@ -7,18 +7,22 @@ export default async function handler(req, res) {
 
   try {
     const { taskid } = req.query;
-    const { completed } = req.body;
+    const { data } = req.body;
 
-    const task = await prisma.task.update({
+    const newData = data.tags
+      ? { ...data, tags: { set: data.tags.map((tag) => ({ id: tag })) } }
+      : data;
+
+    await prisma.task.update({
       where: {
         id: taskid,
       },
       data: {
-        completed,
+        ...newData,
       },
     });
 
-    return res.status(200);
+    return res.status(200).json({ message: 'Task successfully updated' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
