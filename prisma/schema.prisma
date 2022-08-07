@@ -3,46 +3,112 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id       String    @id @default(cuid())
-  name     String?
-  email    String?   @unique
-  level    Int       @default(1)
-  exp      Int       @default(0)
-  expNext  Int       @default(20)
-  streak   Int       @default(0)
-  projects Project[]
-  tasks    Task[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  level         Int       @default(1)
+  exp           Int       @default(0)
+  expMin        Int       @default(0)
+  expToNext     Int       @default(50)
+  streak        Int       @default(0)
+  projects      Project[]   
+  tasks         Task[]
+  pomos         Pomo[]
+  tags          Tag[]
 
   @@map(name: "users")
 }
 
-model Session {
-  id String @id @default(cuid())
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
+  @@unique([identifier, token])
+}
+
+model Pomo { 
+  id          String   @id @default(cuid())
+  start       DateTime  
+  end         DateTime @default(now())
+  date        DateTime
+  duration    Int
+  expMultiple Float @default(1.0)
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  task        Task?     @relation(fields: [taskId], references: [id])
+  taskId      String?
 }
 
 model Project {
   id    String @id @default(cuid())
+  name  String @unique @db.VarChar(20)
   users User[]
-
+  tasks Task[]
 }
 
 model Task {
-  id    String @id @default(cuid())
-  users User[]
+  id        String   @id @default(cuid())
+  name      String
+  date      String
+  completed Boolean  @default(false)
+  priority  Priority @default(P3)
+  notes     String?
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  pomos     Pomo[]
+  project   Project? @relation(fields: [projectId], references: [id])
+  projectId String?
+  tags      Tag[]
 }
 
 model Tag {
-  id String @id @default(cuid())
+  id    String @id @default(cuid())
+  name  String @unique @db.VarChar(20)
+  users User[]
+  tasks Task[]
 }
 
-model Level {
-  level       Int @unique
-  expRequired Int @default(20)
-  expNext     Int
+enum Priority {
+  P1
+  P2
+  P3
 }
