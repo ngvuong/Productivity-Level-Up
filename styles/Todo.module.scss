@@ -8,11 +8,43 @@
     text-align: center;
   }
 
-  .tasks {
+  .upcoming,
+  .legacy {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
     .configs {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--color-alt-3);
     }
+
+    h2 {
+      text-align: center;
+    }
+
+    .tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  .legacy .configs {
+    justify-content: flex-end;
+  }
+
+  .btnNew {
+    color: var(--color-secondary);
+  }
+
+  .btnLegacy {
+    align-self: center;
+    background-color: var(--color-button-4);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
   }
 }
