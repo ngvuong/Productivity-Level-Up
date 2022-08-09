@@ -2,47 +2,7 @@ import { useState, useEffect } from 'react';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
 
-const styles = {
-  control: (styles) => ({
-    ...styles,
-    fontSize: '1.2rem',
-    backgroundColor: '#151515',
-    borderRadius: '1rem',
-  }),
-  menuList: (styles) => ({
-    ...styles,
-    fontSize: '1.2rem',
-    maxHeight: '20rem',
-    backgroundColor: '#1f1f1f',
-    overflow: 'auto',
-  }),
-  input: (styles) => ({ ...styles, color: '#dcd7de' }),
-  singleValue: (styles, { data }) => ({
-    ...styles,
-
-    color:
-      data.value === 'P3'
-        ? '#8f0'
-        : data.value === 'P2'
-        ? '#08f'
-        : data.value === 'P1'
-        ? '#f08'
-        : '#c1a',
-  }),
-  multiValue: (styles) => ({
-    ...styles,
-    backgroundColor: '#151515',
-  }),
-  multiValueLabel: (styles) => ({
-    ...styles,
-    backgroundColor: '#fc2',
-  }),
-  option: (styles, { isFocused, isSelected }) => ({
-    ...styles,
-    color: isSelected ? '#909' : 'inherit',
-    backgroundColor: isSelected ? '#bff' : isFocused ? '#ffffff33' : 'inherit',
-  }),
-};
+import { customSelectStyles } from '../../lib/selectStyles';
 
 export default function CustomSelect({
   name,
@@ -98,7 +58,7 @@ export default function CustomSelect({
           isLoading={isLoading}
           isClearable
           isMulti={multiple}
-          styles={styles}
+          styles={customSelectStyles}
           placeholder={`Select or add ${
             multiple ? 'new ' + name : 'a new ' + name
           }`}
@@ -108,7 +68,7 @@ export default function CustomSelect({
           value={selected}
           onChange={onChange}
           options={options}
-          styles={styles}
+          styles={customSelectStyles}
         />
       )}
     </>
