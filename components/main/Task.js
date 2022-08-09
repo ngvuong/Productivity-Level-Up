@@ -1,12 +1,16 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 import Taskbar from '../ui/Taskbar';
 import Overlay from '../layout/Overlay';
 import TaskCard from '../ui/TaskCard';
+import useModalClose from '../../hooks/useModalClose';
+import useTasksByDate from '../../hooks/useTasksByDate';
+import useTasks from '../../hooks/useTasks';
 
+import { FaInfoCircle, FaWindowClose } from 'react-icons/fa';
 import styles from '../../styles/Task.module.scss';
 
-export default function Task({ task, userId, setTasks }) {
-  const [showCard, setShowCard] = useState(false);
+export default function Task({ task, userId }) {
   const tagIds = task.tags.map((tag) => tag.id);
   const [taskDetails, setTaskDetails] = useState({
     name: task.name,
@@ -16,6 +20,12 @@ export default function Task({ task, userId, setTasks }) {
     date: task.date,
     notes: task.notes || '',
   });
+  const { triggerRef, nodeRef, show, setShow } = useModalClose(false);
+  const { setTasks: setTodayTasks } = useTasksByDate(
+    userId,
+    format(new Date(), 'yyyy-MM-dd')
+  );
+  const { setTasks } = useTasks(userId);
 
   const toggleDone = async (id, done) => {
     const data = { completed: done };
@@ -30,6 +40,7 @@ export default function Task({ task, userId, setTasks }) {
 
     if (result.error) console.error(result.error);
 
+    setTodayTasks();
     setTasks();
   };
 
@@ -79,29 +90,44 @@ export default function Task({ task, userId, setTasks }) {
 
     if (result.error) return alert(result.error);
 
+    setTodayTasks();
+    setTasks();
+  };
+
+  const onDelete = async () => {
+    const result = await fetch(`/api/tasks/${task.id}`, {
+      method: 'DELETE',
+    }).then((res) => res.json());
+
+    if (result.error) return alert(result.error);
+
+    setTodayTasks();
     setTasks();
   };
 
   return (
     <div className={styles.task}>
-      <Taskbar
-        task={task}
-        toggleDone={toggleDone}
-        toggleDetails={() => setShowCard(!showCard)}
-      />
-      {showCard && (
+      <button className={styles.btnInfo} ref={triggerRef}>
+        <FaInfoCircle />
+      </button>
+      <Taskbar task={task} toggleDone={toggleDone} />
+      {show && (
         <Overlay>
           <TaskCard
             task={task}
             userId={userId}
-            setShowCard={setShowCard}
+            setShowCard={setShow}
             taskDetails={taskDetails}
             setTaskDetails={setTaskDetails}
             onSave={onSave}
             valid={!!Object.keys(getChangedData()).length}
+            ref={nodeRef}
           />
         </Overlay>
       )}
+      <button className={styles.btnDelete} onClick={onDelete}>
+        <FaWindowClose />
+      </button>
     </div>
   );
 }
