@@ -1,34 +1,38 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
 import styles from '../../styles/Taskbar.module.scss';
 
-export default function Taskbar({ task, toggleDone, toggleDetails }) {
+export default function Taskbar({ task, toggleDone }) {
   const [done, setDone] = useState(task.completed);
+
+  useEffect(() => {
+    setDone(task.completed);
+  }, [task.completed]);
 
   const debounced = useDebouncedCallback(() => {
     if (done !== task.completed) {
       toggleDone(task.id, done);
     }
-  }, 600);
+  }, 500);
 
   return (
     <div className={styles.container}>
-      <label>
+      <input
+        type='checkbox'
+        id={task.id}
+        checked={done}
+        onChange={(e) => {
+          setDone(e.target.checked);
+          debounced();
+        }}
+      />
+      <label htmlFor={task.id}>
         {done ? <FaRegCheckSquare /> : <FaRegSquare />}
-        <input
-          type='checkbox'
-          checked={done}
-          onChange={(e) => {
-            setDone(e.target.checked);
-            debounced();
-          }}
-        />
       </label>
       <div
         className={styles.taskBar}
-        onClick={toggleDetails}
         style={{
           border: `3px solid ${
             task.priority === 'P3'
