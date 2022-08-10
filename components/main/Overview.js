@@ -7,7 +7,7 @@ import useTasksByDate from '../../hooks/useTasksByDate';
 import styles from '../../styles/Overview.module.scss';
 
 export default function Overview({ userId }) {
-  const { tasks, isLoading, setTasks } = useTasksByDate(
+  const { tasks, isLoading } = useTasksByDate(
     userId,
     format(new Date(), 'yyyy-MM-dd'),
     { revalidateOnMount: true }
@@ -18,22 +18,6 @@ export default function Overview({ userId }) {
   }
 
   const completedTaskCount = tasks.filter((task) => task.completed).length;
-
-  // const toggleDone = async (id, done) => {
-  //   const data = { completed: done };
-
-  //   const result = await fetch(`/api/tasks/${id}`, {
-  //     method: 'PUT',
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify({ data }),
-  //   }).then((res) => res.json());
-
-  //   if (result.error) console.error(result.error);
-
-  //   setTasks();
-  // };
 
   return (
     <section className={styles.overview}>
@@ -48,13 +32,22 @@ export default function Overview({ userId }) {
       </div>
       <h3>Tasks</h3>
       <div className={styles.tasks}>
-        {tasks.map((task) => (
-          <Task key={task.id} task={task} userId={userId} setTasks={setTasks} />
-        ))}
+        {tasks.length ? (
+          tasks.map((task) => (
+            <Task key={task.id} task={task} userId={userId} />
+          ))
+        ) : (
+          <p>No tasks yet</p>
+        )}
       </div>
-      <Link href='/timer'>
-        <a className={styles.track}>Start Session</a>
-      </Link>
+      <div className={styles.links}>
+        <Link href='/todo'>
+          <a className={styles.todo}>Manage Tasks</a>
+        </Link>
+        <Link href='/timer'>
+          <a className={styles.track}>Start Session</a>
+        </Link>
+      </div>
     </section>
   );
 }
