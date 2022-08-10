@@ -11,6 +11,7 @@ export default function CustomSelect({
   onInputChange,
   defaultValue,
   multiple,
+  isClearable,
 }) {
   const [selected, setSelected] = useState(defaultValue);
   const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +69,8 @@ export default function CustomSelect({
           value={selected}
           onChange={onChange}
           options={options}
+          isClearable={isClearable}
+          placeholder={`Select ${name}`}
           styles={customSelectStyles}
         />
       )}
