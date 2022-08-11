@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 
-export default function useTasksByDate(userId, options) {
-  const { data, error, mutate } = useSWR(`/api/user/${userId}/tasks/`, options);
+export default function useTasks(userId, options) {
+  const { data, error, mutate } = useSWR(`/api/user/${userId}/tasks`, options);
 
   return {
     tasks: data,
