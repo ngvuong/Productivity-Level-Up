@@ -1,30 +1,54 @@
 import { useState, useRef, useCallback } from 'react';
+import Select from 'react-select';
 import Clock from '../components/ui/Clock';
 
+import { timeSelectStyles } from '../lib/selectStyles';
 import styles from '../styles/Timer.module.scss';
 
-export default function Timer() {
-  const [duration, setDuration] = useState(0.1);
-  const [breakDuration, setBreakDuration] = useState(1);
-  const [time, setTime] = useState(duration * 60);
+export default function Timer({ user }) {
+  const [timeSelected, setTimeSelected] = useState({
+    label: '30 minutes',
+    value: 1800,
+  });
+  const [breakSelected, setBreakSelected] = useState({
+    label: '1 minute',
+    value: 60,
+  });
+  const [time, setTime] = useState(timeSelected.value);
   const [run, setRun] = useState(false);
   const [soundEffects, setSoundEffects] = useState({
     notification: true,
     ticking: true,
   });
+
+  console.log(user);
+
   const autostart = useRef(null);
   const count = useRef(null);
+
+  const timeOptions = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(
+    (m) => ({
+      label: `${m} minutes`,
+      value: m * 60,
+    })
+  );
+
+  const breakOptions = [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30].map((m) => ({
+    label: m === 0 ? 'No break' : `${m} minute${m > 1 ? 's' : ''}`,
+    value: m * 60,
+  }));
 
   const onDone = useCallback(() => {
     if (!autostart.current.checked) setRun(false);
 
-    count.current = breakDuration ? ++count.current : 0;
+    count.current = breakSelected.value ? ++count.current : 0;
+
     if (count.current % 2 === 0) {
-      setTime(duration * 60);
+      setTime(timeSelected.value);
     } else {
-      setTime(breakDuration * 60);
+      setTime(breakSelected.value);
     }
-  }, [duration, breakDuration]);
+  }, [timeSelected, breakSelected]);
 
   return (
     <main className={styles.timer}>
@@ -35,85 +59,84 @@ export default function Timer() {
         soundEffects={soundEffects}
       />
       <section className={styles.configs}>
-        <div>
-          <label htmlFor='time'>Duration</label>
-          <select
-            name='time'
-            id='time'
-            value={duration}
-            onChange={(e) => {
-              const minutes = parseInt(e.target.value);
-              setDuration(minutes);
-              setTime(minutes * 60);
-            }}
-          >
-            <option value='5'>5 minutes</option>
-            <option value='10'>10 minutes</option>
-            <option value='15'>15 minutes</option>
-            <option value='20'>20 minutes</option>
-            <option value='25'>25 minutes</option>
-            <option value='30'>30 minutes</option>
-            <option value='35'>35 minutes</option>
-            <option value='40'>40 minutes</option>
-            <option value='45'>45 minutes</option>
-            <option value='50'>50 minutes</option>
-            <option value='55'>55 minutes</option>
-            <option value='60'>60 minutes</option>
-          </select>
-        </div>
+        <div className={styles.configsTime}>
+          <label className={styles.time}>
+            Time
+            <Select
+              value={timeSelected}
+              onChange={(option) => {
+                if (!run && count.current % 2 === 0) setTime(option.value);
+                setTimeSelected(option);
+              }}
+              options={timeOptions}
+              isSearchable={false}
+              styles={timeSelectStyles}
+            />
+          </label>
 
-        <div>
-          <label htmlFor='break'>Break</label>
-          <select
-            name='break'
-            id='break'
-            value={breakDuration}
-            onChange={(e) => setBreakDuration(e.target.value)}
-          >
-            <option value=''>No break</option>
-            <option value='1'>1 minute</option>
-            <option value='2'>2 minutes</option>
-            <option value='3'>3 minutes</option>
-            <option value='4'>4 minutes</option>
-            <option value='5'>5 minutes</option>
-            <option value='10'>10 minutes</option>
-            <option value='15'>15 minutes</option>
-          </select>
+          <label className={styles.break}>
+            Break
+            <Select
+              value={breakSelected}
+              onChange={(option) => {
+                if (!run && count.current % 2 === 1) {
+                  if (option.value === 0) {
+                    setTime(timeSelected.value);
+                    count.current = 0;
+                  } else setTime(option.value);
+                }
+
+                setBreakSelected(option);
+              }}
+              options={breakOptions}
+              isSearchable={false}
+              styles={timeSelectStyles}
+            />
+          </label>
         </div>
-        <div>
-          <label htmlFor='autostart'>Auto start</label>
-          <input type='checkbox' id='autostart' ref={autostart} />
-          <label htmlFor='autostart' />
+        <div className={styles.configsOther}>
+          <div>
+            <label htmlFor='autostart'>Autostart</label>
+            <input type='checkbox' id='autostart' ref={autostart} />
+            <label htmlFor='autostart' />
+          </div>
+          <div>
+            <label htmlFor='notificationSound'>Notification</label>
+            <input
+              type='checkbox'
+              id='notificationSound'
+              checked={soundEffects.notification}
+              onChange={(e) =>
+                setSoundEffects({
+                  ...soundEffects,
+                  notification: e.target.checked,
+                })
+              }
+            />
+            <label htmlFor='notificationSound' />
+          </div>
+          <div>
+            <label htmlFor='tickingSound'>Ticking</label>
+            <input
+              type='checkbox'
+              id='tickingSound'
+              checked={soundEffects.ticking}
+              onChange={(e) =>
+                setSoundEffects({ ...soundEffects, ticking: e.target.checked })
+              }
+            />
+            <label htmlFor='tickingSound' />
+          </div>
         </div>
-        <div>
-          <label htmlFor='notificationSound'>Notification</label>
-          <input
-            type='checkbox'
-            id='notificationSound'
-            checked={soundEffects.notification}
-            onChange={(e) =>
-              setSoundEffects({
-                ...soundEffects,
-                notification: e.target.checked,
-              })
-            }
-          />
-          <label htmlFor='notificationSound' />
-        </div>
-        <div>
-          <label htmlFor='tickingSound'>Ticking</label>
-          <input
-            type='checkbox'
-            id='tickingSound'
-            checked={soundEffects.ticking}
-            onChange={(e) =>
-              setSoundEffects({ ...soundEffects, ticking: e.target.checked })
-            }
-          />
-          <label htmlFor='tickingSound' />
+        <div className={styles.controlBtns}>
+          <button className={styles.btnStart} onClick={() => setRun(!run)}>
+            {run ? 'Pause' : 'Start'}
+          </button>
+          <button className={styles.btnSkip} onClick={onDone}>
+            Skip
+          </button>
         </div>
       </section>
-      <button onClick={() => setRun(!run)}>{run ? 'Pause' : 'Start'}</button>
     </main>
   );
 }
