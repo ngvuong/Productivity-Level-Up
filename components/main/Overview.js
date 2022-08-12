@@ -44,7 +44,7 @@ export default function Overview({ userId }) {
         <Link href='/todo'>
           <a className={styles.todo}>Manage Tasks</a>
         </Link>
-        <Link href='/timer'>
+        <Link href='/pomodoro'>
           <a className={styles.track}>Start Session</a>
         </Link>
       </div>
