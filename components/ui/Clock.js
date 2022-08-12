@@ -9,7 +9,7 @@ export default function Clock({ time, run, onDone, soundEffects }) {
   const tick = useRef(null);
 
   useEffect(() => {
-    if (soundEffects.notification) {
+    if (soundEffects.alarm) {
       alarm.current = new Audio('./alarm.wav');
     } else alarm.current = null;
 
@@ -27,12 +27,17 @@ export default function Clock({ time, run, onDone, soundEffects }) {
       const interval = setInterval(() => {
         if (tick.current) tick.current.play();
 
-        setSeconds(seconds - 1);
+        setSeconds((seconds) => seconds - 1);
       }, 1000);
 
       return () => clearInterval(interval);
-    } else if (run && seconds === 0) {
+    }
+  }, [run, seconds]);
+
+  useEffect(() => {
+    if (run && seconds === 0) {
       if (alarm.current) alarm.current.play();
+
       const timeout = setTimeout(() => {
         onDone();
         setSeconds(time);
@@ -44,7 +49,7 @@ export default function Clock({ time, run, onDone, soundEffects }) {
 
   return (
     <div className={styles.clock}>
-      <div className={seconds === 0 ? styles.done : undefined}>
+      <div className={`${styles.clockImg} ${seconds === 0 ? styles.done : ''}`}>
         <RiTimerFlashLine />
         <div className={styles.fill}>
           <style jsx>{`
@@ -55,13 +60,15 @@ export default function Clock({ time, run, onDone, soundEffects }) {
           `}</style>
         </div>
       </div>
-      {`${Math.floor(seconds / 60).toLocaleString('en-US', {
-        minimumIntegerDigits: 2,
-        useGroup: false,
-      })}:${(seconds % 60).toLocaleString('en-US', {
-        minimumIntegerDigits: 2,
-        useGroup: false,
-      })}`}
+      <div className={styles.clockTime}>
+        {`${Math.floor(seconds / 60).toLocaleString('en-US', {
+          minimumIntegerDigits: 2,
+          useGroup: false,
+        })}:${(seconds % 60).toLocaleString('en-US', {
+          minimumIntegerDigits: 2,
+          useGroup: false,
+        })}`}
+      </div>
     </div>
   );
 }
