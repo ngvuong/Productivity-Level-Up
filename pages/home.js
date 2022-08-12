@@ -34,22 +34,7 @@ export default function Home({ user }) {
         </div>
         <Level user={user} />
       </header>
-      <Overview />
+      <Overview userId={user.id} />
     </main>
   );
 }
-
-// export async function getServerSideProps(context) {
-//   const currentUser = await prisma.user.findMany({
-//     where: {
-//       name: 'Vuong Nguyen',
-//     },
-//   });
-//   console.log(currentUser);
-
-//   return {
-//     props: {
-//       currentUser,
-//     },
-//   };
-// }
