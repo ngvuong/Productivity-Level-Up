@@ -21,7 +21,7 @@ export default function Navbar() {
             <RiHome4Fill />
           </a>
         </Link>
-        <Link href='/timer'>
+        <Link href='/pomodoro'>
           <a>
             <RiTimerFill />
           </a>
@@ -31,7 +31,7 @@ export default function Navbar() {
             <RiPlantFill />
           </a>
         </Link>
-        <Link href='/tasks'>
+        <Link href='/todo'>
           <a>
             <RiCalendarTodoFill />
           </a>
