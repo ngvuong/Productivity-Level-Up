@@ -2,6 +2,16 @@ import { useState, useRef, useCallback } from 'react';
 import Select from 'react-select';
 import Clock from './Clock';
 
+import {
+  MdPlayArrow,
+  MdPause,
+  MdSkipNext,
+  MdAccessTimeFilled,
+  MdCoffee,
+  MdAutorenew,
+  MdNotifications,
+  MdVolumeUp,
+} from 'react-icons/md';
 import { timeSelectStyles } from '../../lib/selectStyles';
 import styles from '../../styles/Timer.module.scss';
 
@@ -65,16 +75,16 @@ export default function Timer({ user }) {
       </div>
       <div className={styles.controlBtns}>
         <button className={styles.btnStart} onClick={() => setRun(!run)}>
-          {run ? 'Pause' : 'Start'}
+          {run ? <MdPause /> : <MdPlayArrow />}
         </button>
         <button className={styles.btnSkip} onClick={onDone}>
-          Skip
+          <MdSkipNext />
         </button>
       </div>
       <div className={styles.configs}>
         <div className={styles.configsTime}>
           <label className={styles.time}>
-            Time
+            <MdAccessTimeFilled />
             <Select
               value={timeSelected}
               onChange={(option) => {
@@ -88,7 +98,7 @@ export default function Timer({ user }) {
           </label>
 
           <label className={styles.break}>
-            Break
+            <MdCoffee />
             <Select
               value={breakSelected}
               onChange={(option) => {
@@ -109,12 +119,16 @@ export default function Timer({ user }) {
         </div>
         <div className={styles.configsMisc}>
           <div>
-            <label htmlFor='autostart'>Autostart</label>
+            <label htmlFor='autostart'>
+              <MdAutorenew />
+            </label>
             <input type='checkbox' id='autostart' ref={autostart} />
             <label htmlFor='autostart' />
           </div>
           <div>
-            <label htmlFor='alarmSound'>Alarm</label>
+            <label htmlFor='alarmSound'>
+              <MdNotifications />
+            </label>
             <input
               type='checkbox'
               id='alarmSound'
@@ -129,7 +143,9 @@ export default function Timer({ user }) {
             <label htmlFor='alarmSound' />
           </div>
           <div>
-            <label htmlFor='tickingSound'>Ticking</label>
+            <label htmlFor='tickingSound'>
+              <MdVolumeUp />
+            </label>
             <input
               type='checkbox'
               id='tickingSound'
