@@ -67,7 +67,14 @@ const TaskCard = forwardRef(
       }
 
       return () => setTaskDetails(defaultDetails);
-    }, [projects, projectOptions, tags, tagOptions]);
+    }, [
+      projects,
+      projectOptions,
+      tags,
+      tagOptions,
+      setTaskDetails,
+      defaultDetails,
+    ]);
 
     const onNewProject = async (project) => {
       const name = project
