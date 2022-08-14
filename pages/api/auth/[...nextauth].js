@@ -7,8 +7,10 @@ import prisma from '../../../lib/prisma';
 
 export default NextAuth({
   session: {
-    maxAge: 60 * 60 * 24, // 1 day
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24 * 4,
   },
+  database: process.env.DATABASE_URL,
   adapter: PrismaAdapter(prisma),
   providers: [
     GitHubProvider({
@@ -29,7 +31,15 @@ export default NextAuth({
   },
   callbacks: {
     session: async ({ session, user }) => {
-      session.user = user;
+      const currentUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          tasks: true,
+          projects: true,
+        },
+      });
+
+      session.user = currentUser;
 
       return session;
     },
