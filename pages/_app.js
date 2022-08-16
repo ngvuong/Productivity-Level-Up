@@ -1,5 +1,6 @@
 import { SessionProvider } from 'next-auth/react';
 import { UserProvider } from '../contexts/userContext';
+import { TimerProvider } from '../contexts/timerContext';
 import { SWRConfig } from 'swr';
 import Layout from '../components/layout/Layout';
 
@@ -17,7 +18,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           }}
         >
           <Layout>
-            <Component {...pageProps} />
+            <TimerProvider>
+              <Component {...pageProps} />
+            </TimerProvider>
           </Layout>
         </SWRConfig>
       </UserProvider>
