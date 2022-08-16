@@ -3,17 +3,22 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 0;
+    height: 0;
+
+    &:focus + label {
+      outline: 1px solid var(--color-secondary);
+    }
+  }
 
   label {
     display: flex;
     color: var(--color-highlight);
     font-size: 2rem;
     cursor: pointer;
-
-    input {
-      display: none;
-    }
   }
 
   .taskBar {
