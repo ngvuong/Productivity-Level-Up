@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Select from 'react-select';
 import Clock from './Clock';
+import { useTimer } from '../../contexts/timerContext';
 
 import {
   MdPlayArrow,
@@ -24,15 +25,55 @@ export default function Timer({ user }) {
     label: '1 Minute',
     value: 5,
   });
-  const [time, setTime] = useState(timeSelected.value);
-  const [run, setRun] = useState(false);
-  const [soundEffects, setSoundEffects] = useState({
-    alarm: true,
-    ticking: true,
-  });
+  // const [time, setTime] = useState(timeSelected.value);
+  // const [run, setRun] = useState(false);
+  // const [soundEffects, setSoundEffects] = useState({
+  //   alarm: true,
+  //   ticking: true,
+  // });
 
-  const autostart = useRef(null);
-  const count = useRef(null);
+  // const autostart = useRef(null);
+  // const count = useRef(null);
+
+  const [
+    { time, run, count, pomodoro, breakTime, autostart, alarm, ticking },
+    dispatch,
+  ] = useTimer();
+
+  // useEffect(() => {
+  //   if (run && time === 0) {
+  //     // if (alarmRef.current) alarmRef.current.play();
+
+  //     const timeout = setTimeout(() => {
+  //       const currentCount = breakTime ? count + 1 : count + 2;
+
+  //       dispatch({ type: 'SET_COUNT', count: currentCount });
+  //       if (currentCount % 2 === 0) {
+  //         dispatch({ type: 'SET_TIME', time: pomodoro });
+  //       } else {
+  //         dispatch({ type: 'SET_TIME', time: breakTime });
+  //       }
+  //       if (!autostart) dispatch({ type: 'STOP_TIMER' });
+  //       // onDone();
+  //     }, 1000);
+
+  //     return () => clearTimeout(timeout);
+  //   }
+  // }, [time, run, count, pomodoro, breakTime, autostart, dispatch]);
+
+  // const onDone = () => {
+  //   const currentCount = breakTime ? count + 1 : count + 2;
+
+  //   dispatch({ type: 'SET_COUNT', count: currentCount });
+
+  //   if (currentCount % 2 === 0) {
+  //     dispatch({ type: 'SET_TIME', time: pomodoro });
+  //   } else {
+  //     dispatch({ type: 'SET_TIME', time: breakTime });
+  //   }
+
+  //   if (!autostart) dispatch({ type: 'STOP_TIMER' });
+  // };
 
   const timeOptions = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(
     (m) => ({
@@ -46,38 +87,56 @@ export default function Timer({ user }) {
     value: m * 60,
   }));
 
-  const onDone = useCallback(() => {
-    if (!autostart.current.checked) setRun(false);
+  // const onDone = useCallback(() => {
+  //   if (!autostart.current.checked) setRun(false);
 
-    count.current = breakSelected.value ? ++count.current : 0;
+  //   count.current = breakSelected.value ? ++count.current : 0;
 
-    if (count.current % 2 === 0) {
-      setTime(timeSelected.value);
+  //   if (count.current % 2 === 0) {
+  //     setTime(timeSelected.value);
+  //   } else {
+  //     setTime(breakSelected.value);
+  //   }
+  // }, [timeSelected, breakSelected]);
+
+  const onSkip = () => {
+    const currentCount = breakTime ? count + 1 : 0;
+
+    if (currentCount % 2 === 0) {
+      dispatch({ type: 'SET_TIME', time: pomodoro });
     } else {
-      setTime(breakSelected.value);
+      dispatch({ type: 'SET_TIME', time: breakTime });
     }
-  }, [timeSelected, breakSelected]);
+
+    dispatch({ type: 'STOP_TIMER' });
+    dispatch({ type: 'SET_COUNT', count: currentCount });
+  };
 
   return (
     <div className={styles.timer}>
       <Clock
         time={time}
-        run={run}
-        onDone={onDone}
-        soundEffects={soundEffects}
+        totalTime={count % 2 === 0 ? pomodoro : breakTime}
+        // seconds={seconds}
+        // run={run}
+        // onDone={onDone}
+        // soundEffects={soundEffects}
       />
       <div className={styles.status}>
-        {run
-          ? count.current % 2 === 0
-            ? 'IN SESSION'
-            : 'BREAK TIME'
-          : 'INACTIVE'}
+        {run ? (count % 2 === 0 ? 'IN SESSION' : 'BREAK TIME') : 'INACTIVE'}
       </div>
       <div className={styles.controlBtns}>
-        <button className={styles.btnStart} onClick={() => setRun(!run)}>
+        <button
+          className={styles.btnStart}
+          onClick={() =>
+            run
+              ? dispatch({ type: 'STOP_TIMER' })
+              : dispatch({ type: 'START_TIMER' })
+          }
+        >
           {run ? <MdPause /> : <MdPlayArrow />}
         </button>
-        <button className={styles.btnSkip} onClick={onDone}>
+        <button className={styles.btnSkip} onClick={onSkip}>
           <MdSkipNext />
         </button>
       </div>
@@ -88,7 +147,12 @@ export default function Timer({ user }) {
             <Select
               value={timeSelected}
               onChange={(option) => {
-                if (!run && count.current % 2 === 0) setTime(option.value);
+                if (!run && count % 2 === 0) {
+                  dispatch({ type: 'SET_TIME', time: option.value });
+                }
+
+                dispatch({ type: 'SET_POMODORO', pomodoro: option.value });
+
                 setTimeSelected(option);
               }}
               options={timeOptions}
@@ -102,12 +166,15 @@ export default function Timer({ user }) {
             <Select
               value={breakSelected}
               onChange={(option) => {
-                if (!run && count.current % 2 === 1) {
+                if (!run && count % 2 === 1) {
                   if (option.value === 0) {
-                    setTime(timeSelected.value);
-                    count.current = 0;
-                  } else setTime(option.value);
+                    dispatch({ type: 'SET_TIME', time: pomodoro });
+                  }
                 }
+                dispatch({
+                  type: 'SET_BREAKTIME',
+                  breakTime: option.value,
+                });
 
                 setBreakSelected(option);
               }}
@@ -122,7 +189,14 @@ export default function Timer({ user }) {
             <label htmlFor='autostart'>
               <MdAutorenew />
             </label>
-            <input type='checkbox' id='autostart' ref={autostart} />
+            <input
+              type='checkbox'
+              id='autostart'
+              checked={autostart}
+              onChange={(e) =>
+                dispatch({ type: 'SET_AUTOSTART', autostart: e.target.checked })
+              }
+            />
             <label htmlFor='autostart' />
           </div>
           <div>
@@ -132,12 +206,9 @@ export default function Timer({ user }) {
             <input
               type='checkbox'
               id='alarmSound'
-              checked={soundEffects.alarm}
+              checked={alarm}
               onChange={(e) =>
-                setSoundEffects({
-                  ...soundEffects,
-                  alarm: e.target.checked,
-                })
+                dispatch({ type: 'SET_ALARM', alarm: e.target.checked })
               }
             />
             <label htmlFor='alarmSound' />
@@ -149,9 +220,9 @@ export default function Timer({ user }) {
             <input
               type='checkbox'
               id='tickingSound'
-              checked={soundEffects.ticking}
+              checked={ticking}
               onChange={(e) =>
-                setSoundEffects({ ...soundEffects, ticking: e.target.checked })
+                dispatch({ type: 'SET_TICKING', ticking: e.target.checked })
               }
             />
             <label htmlFor='tickingSound' />
