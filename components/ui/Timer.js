@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import Select from 'react-select';
 import Clock from './Clock';
 import { useTimer } from '../../contexts/timerContext';
@@ -25,55 +25,11 @@ export default function Timer({ user }) {
     label: '1 Minute',
     value: 5,
   });
-  // const [time, setTime] = useState(timeSelected.value);
-  // const [run, setRun] = useState(false);
-  // const [soundEffects, setSoundEffects] = useState({
-  //   alarm: true,
-  //   ticking: true,
-  // });
-
-  // const autostart = useRef(null);
-  // const count = useRef(null);
 
   const [
-    { time, run, count, pomodoro, breakTime, autostart, alarm, ticking },
+    { time, run, inSession, pomodoro, breakTime, autostart, alarm, ticking },
     dispatch,
   ] = useTimer();
-
-  // useEffect(() => {
-  //   if (run && time === 0) {
-  //     // if (alarmRef.current) alarmRef.current.play();
-
-  //     const timeout = setTimeout(() => {
-  //       const currentCount = breakTime ? count + 1 : count + 2;
-
-  //       dispatch({ type: 'SET_COUNT', count: currentCount });
-  //       if (currentCount % 2 === 0) {
-  //         dispatch({ type: 'SET_TIME', time: pomodoro });
-  //       } else {
-  //         dispatch({ type: 'SET_TIME', time: breakTime });
-  //       }
-  //       if (!autostart) dispatch({ type: 'STOP_TIMER' });
-  //       // onDone();
-  //     }, 1000);
-
-  //     return () => clearTimeout(timeout);
-  //   }
-  // }, [time, run, count, pomodoro, breakTime, autostart, dispatch]);
-
-  // const onDone = () => {
-  //   const currentCount = breakTime ? count + 1 : count + 2;
-
-  //   dispatch({ type: 'SET_COUNT', count: currentCount });
-
-  //   if (currentCount % 2 === 0) {
-  //     dispatch({ type: 'SET_TIME', time: pomodoro });
-  //   } else {
-  //     dispatch({ type: 'SET_TIME', time: breakTime });
-  //   }
-
-  //   if (!autostart) dispatch({ type: 'STOP_TIMER' });
-  // };
 
   const timeOptions = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(
     (m) => ({
@@ -87,43 +43,21 @@ export default function Timer({ user }) {
     value: m * 60,
   }));
 
-  // const onDone = useCallback(() => {
-  //   if (!autostart.current.checked) setRun(false);
-
-  //   count.current = breakSelected.value ? ++count.current : 0;
-
-  //   if (count.current % 2 === 0) {
-  //     setTime(timeSelected.value);
-  //   } else {
-  //     setTime(breakSelected.value);
-  //   }
-  // }, [timeSelected, breakSelected]);
-
   const onSkip = () => {
-    const currentCount = breakTime ? count + 1 : 0;
+    const timeNext = breakTime && inSession ? breakTime : pomodoro;
 
-    if (currentCount % 2 === 0) {
-      dispatch({ type: 'SET_TIME', time: pomodoro });
-    } else {
-      dispatch({ type: 'SET_TIME', time: breakTime });
-    }
+    dispatch({ type: 'SET_TIME', time: timeNext });
 
-    dispatch({ type: 'STOP_TIMER' });
-    dispatch({ type: 'SET_COUNT', count: currentCount });
+    dispatch({ type: 'SET_IN_SESSION' });
+
+    if (!autostart) dispatch({ type: 'STOP_TIMER' });
   };
 
   return (
     <div className={styles.timer}>
-      <Clock
-        time={time}
-        totalTime={count % 2 === 0 ? pomodoro : breakTime}
-        // seconds={seconds}
-        // run={run}
-        // onDone={onDone}
-        // soundEffects={soundEffects}
-      />
+      <Clock time={time} totalTime={inSession ? pomodoro : breakTime} />
       <div className={styles.status}>
-        {run ? (count % 2 === 0 ? 'IN SESSION' : 'BREAK TIME') : 'INACTIVE'}
+        {run ? (inSession ? 'IN SESSION' : 'ON BREAK') : 'INACTIVE'}
       </div>
       <div className={styles.controlBtns}>
         <button
@@ -147,16 +81,14 @@ export default function Timer({ user }) {
             <Select
               value={timeSelected}
               onChange={(option) => {
-                if (!run && count % 2 === 0) {
-                  dispatch({ type: 'SET_TIME', time: option.value });
+                if (!inSession) {
+                  setTimeSelected(option);
+                  dispatch({ type: 'SET_POMODORO', pomodoro: option.value });
                 }
-
-                dispatch({ type: 'SET_POMODORO', pomodoro: option.value });
-
-                setTimeSelected(option);
               }}
               options={timeOptions}
               isSearchable={false}
+              isDisabled={inSession}
               styles={timeSelectStyles}
             />
           </label>
@@ -166,20 +98,17 @@ export default function Timer({ user }) {
             <Select
               value={breakSelected}
               onChange={(option) => {
-                if (!run && count % 2 === 1) {
-                  if (option.value === 0) {
-                    dispatch({ type: 'SET_TIME', time: pomodoro });
-                  }
+                if (inSession) {
+                  setBreakSelected(option);
+                  dispatch({
+                    type: 'SET_BREAKTIME',
+                    breakTime: option.value,
+                  });
                 }
-                dispatch({
-                  type: 'SET_BREAKTIME',
-                  breakTime: option.value,
-                });
-
-                setBreakSelected(option);
               }}
               options={breakOptions}
               isSearchable={false}
+              isDisabled={!inSession}
               styles={timeSelectStyles}
             />
           </label>
