@@ -21,25 +21,20 @@ const timerReducer = (state, action) => {
         ...state,
         run: false,
       };
-    case 'GET_TIME':
-      return {
-        ...state,
-        time: action.time,
-      };
     case 'SET_TIME':
       return {
         ...state,
         time: action.time,
       };
-    case 'SKIP_TIME':
-      return {
-        ...state,
-        count: action.count,
-      };
     case 'SET_COUNT':
       return {
         ...state,
         count: action.count,
+      };
+    case 'SET_IN_SESSION':
+      return {
+        ...state,
+        inSession: state.breakTime ? !state.inSession : true,
       };
     case 'SET_POMODORO':
       return {
@@ -80,6 +75,7 @@ export const TimerProvider = ({ user, children }) => {
       pomodoro: 4,
       breakTime: 5,
       count: 0,
+      inSession: true,
       autostart: false,
       alarm: true,
       ticking: true,
@@ -91,8 +87,17 @@ export const TimerProvider = ({ user, children }) => {
   const tickingRef = useRef(null);
   // console.log(user);
 
-  const { time, run, pomodoro, breakTime, count, autostart, alarm, ticking } =
-    state;
+  const {
+    time,
+    run,
+    pomodoro,
+    breakTime,
+    count,
+    inSession,
+    autostart,
+    alarm,
+    ticking,
+  } = state;
 
   useEffect(() => {
     if (alarm) {
@@ -120,21 +125,20 @@ export const TimerProvider = ({ user, children }) => {
       if (alarmRef.current) alarmRef.current.play();
 
       const timeout = setTimeout(() => {
-        const currentCount = breakTime ? count + 1 : count + 2;
+        const timeNext = breakTime && inSession ? breakTime : pomodoro;
 
-        dispatch({ type: 'SET_COUNT', count: currentCount });
-        if (currentCount % 2 === 0) {
-          dispatch({ type: 'SET_TIME', time: pomodoro });
-        } else {
-          dispatch({ type: 'SET_TIME', time: breakTime });
-        }
+        if (inSession) dispatch({ type: 'SET_COUNT', count: count + 1 });
+
+        dispatch({ type: 'SET_TIME', time: timeNext });
+
+        dispatch({ type: 'SET_IN_SESSION' });
+
         if (!autostart) dispatch({ type: 'STOP_TIMER' });
-        // onDone();
       }, 1000);
 
       return () => clearTimeout(timeout);
     }
-  }, [time, run, count, pomodoro, breakTime, autostart]);
+  }, [time, run, count, inSession, pomodoro, breakTime, autostart]);
 
   const value = [state, dispatch];
 
