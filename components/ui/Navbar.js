@@ -1,5 +1,6 @@
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { useTimer } from '../../contexts/timerContext';
 
 import {
   RiHome4Fill,
@@ -11,8 +12,11 @@ import {
   RiLogoutBoxFill,
 } from 'react-icons/ri';
 import styles from '../../styles/Navbar.module.scss';
+import Clock from './Clock';
 
 export default function Navbar() {
+  const [{ time, run }] = useTimer();
+
   return (
     <>
       <nav className={styles.navbar}>
@@ -22,9 +26,7 @@ export default function Navbar() {
           </a>
         </Link>
         <Link href='/pomodoro'>
-          <a>
-            <RiTimerFill />
-          </a>
+          <a>{run ? <Clock time={time} /> : <RiTimerFill />}</a>
         </Link>
         <Link href='/garden'>
           <a>
