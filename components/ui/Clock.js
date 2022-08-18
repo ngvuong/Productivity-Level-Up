@@ -3,38 +3,53 @@ import { useState, useEffect } from 'react';
 import { RiTimerFlashLine } from 'react-icons/ri';
 import styles from '../../styles/Clock.module.scss';
 
-export default function Clock({ time, totalTime, run }) {
-  const [seconds, setSeconds] = useState(time);
-  const [secondsTick, setSecondsTick] = useState(false);
-  const [minutesTick, setMinutesTick] = useState(false);
+export default function Clock({ time, totalTime }) {
+  const [currentTime, setCurrentTime] = useState(time);
+  const [secondsTick, setSecondsTick] = useState({ ones: false, tens: false });
+  const [minutesTick, setMinutesTick] = useState({ ones: false, tens: false });
+
+  const seconds = (currentTime % 60).toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+  const secondsNext = (time % 60).toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+  const minutes = Math.floor(currentTime / 60).toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
+  const minutesNext = Math.floor(time / 60).toLocaleString('en-US', {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  });
 
   useEffect(() => {
-    setSecondsTick(true);
+    const update = (prev) => console.log(prev);
+
+    setSecondsTick(update);
 
     const timeout = setTimeout(() => {
-      setSecondsTick(false);
-      setSeconds(time);
+      setSecondsTick(update);
+      setCurrentTime(time);
     }, 210);
 
-    return () => clearTimeout(timeout);
+    if (time % 10 === 9) setSecondsTick((prev) => ({ ...prev, tens: true }));
+
+    return () => {
+      setSecondsTick((prev) => ({ ...prev, tens: false }));
+      clearTimeout(timeout);
+    };
   }, [time]);
 
   useEffect(() => {
     if (time % 60 === 59) {
       setMinutesTick(true);
-      // const timeout = setTimeout(() => {
-      //   setMinutesTick(true);
-      // }, 1000);
 
-      // return () => clearTimeout(timeout);
-    } else if (minutesTick) {
-      const timeout = setTimeout(() => {
-        setMinutesTick(false);
-      }, 1000);
-
-      return () => clearTimeout(timeout);
+      return () => setMinutesTick(false);
     }
-  }, [time, minutesTick]);
+  }, [time]);
 
   return (
     <div className={styles.clock}>
@@ -57,33 +72,43 @@ export default function Clock({ time, totalTime, run }) {
         }`}
       >
         <div className={styles.minutes}>
-          <span className={`${minutesTick ? styles.tick : ''}`}>
-            {`${Math.floor(time / 60).toLocaleString('en-US', {
-              minimumIntegerDigits: 2,
-              useGroup: false,
-            })}`}
-          </span>
-          <span className={`${minutesTick ? styles.tick : ''}`}>
-            {`${Math.floor(seconds / 60).toLocaleString('en-US', {
-              minimumIntegerDigits: 2,
-              useGroup: false,
-            })}`}
-          </span>
+          <div>
+            <span className={`${minutesTick.tens ? styles.tick : ''}`}>
+              {minutesNext[0]}
+            </span>
+            <span className={`${minutesTick.tens ? styles.tick : ''}`}>
+              {minutes[0]}
+            </span>
+          </div>
+          <div>
+            <span className={`${minutesTick.ones ? styles.tick : ''}`}>
+              {minutesNext[1]}
+            </span>
+            <span className={`${minutesTick.ones ? styles.tick : ''}`}>
+              {minutes[1]}
+            </span>
+          </div>
         </div>
+
         {totalTime && ':'}
+
         <div className={styles.seconds}>
-          <span className={`${secondsTick ? styles.tick : ''}`}>
-            {`${(time % 60).toLocaleString('en-US', {
-              minimumIntegerDigits: 2,
-              useGroup: false,
-            })}`}
-          </span>
-          <span className={`${secondsTick ? styles.tick : ''}`}>
-            {`${(seconds % 60).toLocaleString('en-US', {
-              minimumIntegerDigits: 2,
-              useGroup: false,
-            })}`}
-          </span>
+          <div>
+            <span className={`${secondsTick.tens ? styles.tick : ''}`}>
+              {secondsNext[0]}
+            </span>
+            <span className={`${secondsTick.tens ? styles.tick : ''}`}>
+              {seconds[0]}
+            </span>
+          </div>
+          <div>
+            <span className={`${secondsTick.ones ? styles.tick : ''}`}>
+              {secondsNext[1]}
+            </span>
+            <span className={`${secondsTick.ones ? styles.tick : ''}`}>
+              {seconds[1]}
+            </span>
+          </div>
         </div>
       </div>
     </div>
