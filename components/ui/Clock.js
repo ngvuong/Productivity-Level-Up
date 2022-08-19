@@ -26,29 +26,28 @@ export default function Clock({ time, totalTime }) {
   });
 
   useEffect(() => {
-    const update = (prev) => console.log(prev);
-
-    setSecondsTick(update);
+    setSecondsTick((prev) => ({ ...prev, ones: true }));
 
     const timeout = setTimeout(() => {
-      setSecondsTick(update);
+      setSecondsTick((prev) => ({ ...prev, ones: false }));
       setCurrentTime(time);
     }, 210);
 
     if (time % 10 === 9) setSecondsTick((prev) => ({ ...prev, tens: true }));
 
+    if (time % 60 === 59) {
+      setMinutesTick((prev) => ({ ...prev, ones: true }));
+    }
+
+    if (time % 600 === 599) {
+      setMinutesTick((prev) => ({ ...prev, tens: true }));
+    }
+
     return () => {
       setSecondsTick((prev) => ({ ...prev, tens: false }));
+      setMinutesTick({ ones: false, tens: false });
       clearTimeout(timeout);
     };
-  }, [time]);
-
-  useEffect(() => {
-    if (time % 60 === 59) {
-      setMinutesTick(true);
-
-      return () => setMinutesTick(false);
-    }
   }, [time]);
 
   return (
@@ -89,8 +88,6 @@ export default function Clock({ time, totalTime }) {
             </span>
           </div>
         </div>
-
-        {totalTime && ':'}
 
         <div className={styles.seconds}>
           <div>
