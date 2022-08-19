@@ -13,17 +13,9 @@
 
   .stats {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     flex-wrap: wrap;
     gap: 2rem 0;
-
-    div {
-      background-color: var(--color-primary-darker);
-      padding: 0.5rem 1rem;
-      border: 1px solid var(--color-accent);
-      box-shadow: 0 0 0.5rem var(--color-accent);
-      transform: skewX(-25deg);
-    }
   }
 
   .tasks {
