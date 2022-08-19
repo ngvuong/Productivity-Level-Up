@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
+import Stat from '../ui/Stat';
 import Task from './Task';
 import Spinner from '../layout/Spinner';
 import useTasksByDate from '../../hooks/useTasksByDate';
+import { useTimer } from '../../contexts/timerContext';
 
 import styles from '../../styles/Overview.module.scss';
 
@@ -12,6 +14,8 @@ export default function Overview({ userId }) {
     format(new Date(), 'yyyy-MM-dd'),
     { revalidateOnMount: true }
   );
+
+  const [{ totalTime, count }] = useTimer();
 
   if (isLoading) {
     return <Spinner />;
@@ -23,12 +27,10 @@ export default function Overview({ userId }) {
     <section className={styles.overview}>
       <h2>Today</h2>
       <div className={styles.stats}>
-        <div>8 Sessions Completed</div>
-        <div>{`${completedTaskCount} Task${
-          completedTaskCount !== 1 ? 's' : ''
-        } Completed`}</div>
-        <div>100 Exp Gained</div>
-        <div>360 Minutes Logged</div>
+        <Stat stat={count} label='session' />
+        <Stat stat={completedTaskCount} label='task' />
+        <Stat stat={100} label='exp' />
+        <Stat stat={Math.floor(totalTime / 60)} label='minute' />
       </div>
       <h3>Tasks</h3>
       <div className={styles.tasks}>
