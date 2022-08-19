@@ -67,26 +67,26 @@
 
   &Time {
     display: flex;
-    align-items: center;
-    // height: 10rem;
+    gap: 1rem;
     color: var(--color-primary);
     font-size: 5rem;
     font-weight: bold;
+    font-style: italic;
     line-height: 1;
-    background: radial-gradient(
-      ellipse,
-      #c0c0c0 0%,
-      #c0c0c0cc 50%,
-      #c0c0c080 100%
-    );
-    padding: 1rem;
-    border-radius: 1rem;
-    box-shadow: 0 0 1rem var(--color-shadow);
+    text-shadow: 1px 1px 1px var(--color-overlay);
 
     .minutes,
     .seconds {
       display: flex;
-      text-align: center;
+      background: radial-gradient(
+        ellipse,
+        #c0c0c0 0%,
+        #c0c0c0cc 50%,
+        #c0c0c080 100%
+      );
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 1rem var(--color-shadow);
 
       div {
         display: flex;
@@ -95,7 +95,8 @@
         overflow: hidden;
 
         span {
-          width: 3.2rem;
+          width: 3.5rem;
+          text-align: center;
           transform: translateY(-5rem);
         }
 
@@ -107,13 +108,41 @@
     }
 
     &.mini {
-      display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      gap: 0;
       width: 3.8rem;
       height: 3.8rem;
-      font-size: 2rem;
+      font-size: 1.9rem;
+      background: radial-gradient(
+        ellipse,
+        #c0c0c0 0%,
+        #c0c0c0cc 50%,
+        #c0c0c080 100%
+      );
+      border-radius: 1rem;
+
+      .minutes,
+      .seconds {
+        justify-content: center;
+        background: none;
+        padding: 0;
+        border-radius: 0;
+        box-shadow: none;
+
+        div {
+          height: 1.9rem;
+
+          span {
+            width: 1.3rem;
+            transform: translateY(-1.9rem);
+          }
+
+          .tick {
+            transform: translateY(0);
+            transition: transform 200ms ease-in;
+          }
+        }
+      }
 
       &.done {
         animation: flash 1s linear;
@@ -125,18 +154,22 @@
 
           25% {
             color: var(--color-primary);
+            transform: scale(1.1);
           }
 
           50% {
             color: var(--color-secondary);
+            transform: scale(1);
           }
 
           75% {
             color: var(--color-primary);
+            transform: scale(1.1);
           }
 
           100% {
             color: var(--color-secondary);
+            transform: scale(1);
           }
         }
       }
