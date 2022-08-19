@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function useModalClose(initState) {
+export default function useModal(initState) {
   const [show, setShow] = useState(initState);
   const triggerRef = useRef(null);
   const nodeRef = useRef(null);
