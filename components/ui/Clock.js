@@ -8,47 +8,38 @@ export default function Clock({ time, totalTime }) {
   const [secondsTick, setSecondsTick] = useState({ ones: false, tens: false });
   const [minutesTick, setMinutesTick] = useState({ ones: false, tens: false });
 
-  const seconds = (currentTime % 60).toLocaleString('en-US', {
-    minimumIntegerDigits: 2,
-    useGrouping: false,
-  });
-  const secondsNext = (time % 60).toLocaleString('en-US', {
-    minimumIntegerDigits: 2,
-    useGrouping: false,
-  });
-  const minutes = Math.floor(currentTime / 60).toLocaleString('en-US', {
-    minimumIntegerDigits: 2,
-    useGrouping: false,
-  });
-  const minutesNext = Math.floor(time / 60).toLocaleString('en-US', {
-    minimumIntegerDigits: 2,
-    useGrouping: false,
-  });
+  const options = { minimumIntegerDigits: 2, useGrouping: false };
+  const seconds = (currentTime % 60).toLocaleString('en-US', options);
+  const secondsNext = (time % 60).toLocaleString('en-US', options);
+  const minutes = Math.floor(currentTime / 60).toLocaleString('en-US', options);
+  const minutesNext = Math.floor(time / 60).toLocaleString('en-US', options);
 
   useEffect(() => {
-    setSecondsTick((prev) => ({ ...prev, ones: true }));
+    const isStart = time === currentTime;
+
+    if (!isStart && time !== totalTime)
+      setSecondsTick((prev) => ({ ...prev, ones: true }));
 
     const timeout = setTimeout(() => {
       setSecondsTick((prev) => ({ ...prev, ones: false }));
       setCurrentTime(time);
     }, 210);
 
-    if (time % 10 === 9) setSecondsTick((prev) => ({ ...prev, tens: true }));
+    if (time % 10 === 9 && !isStart)
+      setSecondsTick((prev) => ({ ...prev, tens: true }));
 
-    if (time % 60 === 59) {
+    if (time % 60 === 59 && !isStart)
       setMinutesTick((prev) => ({ ...prev, ones: true }));
-    }
 
-    if (time % 600 === 599) {
+    if (time % 600 === 599 && !isStart)
       setMinutesTick((prev) => ({ ...prev, tens: true }));
-    }
 
     return () => {
       setSecondsTick((prev) => ({ ...prev, tens: false }));
       setMinutesTick({ ones: false, tens: false });
       clearTimeout(timeout);
     };
-  }, [time]);
+  }, [time, currentTime, totalTime]);
 
   return (
     <div className={styles.clock}>
@@ -65,6 +56,7 @@ export default function Clock({ time, totalTime }) {
           </div>
         </div>
       )}
+
       <div
         className={`${styles.clockTime} ${!totalTime ? styles.mini : ''} ${
           time === 0 ? styles.done : ''
