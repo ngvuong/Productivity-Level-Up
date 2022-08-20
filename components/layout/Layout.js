@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Overlay from './Overlay';
 import Spinner from './Spinner';
-import Navbar from '../ui/Navbar';
 import { useUser } from '../../contexts/userContext';
 
 import styles from '../../styles/Layout.module.scss';
@@ -50,7 +49,6 @@ export default function Layout({ children }) {
           ? user && cloneElement(children, { user })
           : status === 'unauthenticated' && children}
       </div>
-      {user && <Navbar />}
     </>
   );
 }
