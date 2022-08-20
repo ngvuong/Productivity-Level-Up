@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import Taskbar from '../ui/Taskbar';
 import Overlay from '../layout/Overlay';
 import TaskCard from '../ui/TaskCard';
-import useModalClose from '../../hooks/useModalClose';
+import useModal from '../../hooks/useModal';
 import useTasksByDate from '../../hooks/useTasksByDate';
 import useTasks from '../../hooks/useTasks';
 
@@ -20,7 +20,7 @@ export default function Task({ task, userId }) {
     date: task.date,
     notes: task.notes || '',
   });
-  const { triggerRef, nodeRef, show, setShow } = useModalClose(false);
+  const { triggerRef, nodeRef, show, setShow } = useModal(false);
   const { setTasks: setTodayTasks } = useTasksByDate(
     userId,
     format(new Date(), 'yyyy-MM-dd')
