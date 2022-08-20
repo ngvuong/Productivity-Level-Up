@@ -16,18 +16,30 @@ import {
 import { timeSelectStyles } from '../../lib/selectStyles';
 import styles from '../../styles/Timer.module.scss';
 
-export default function Timer({ user }) {
+export default function Timer({ defaultTime, defaultBreak }) {
   const [timeSelected, setTimeSelected] = useState({
-    label: '30 Minutes',
-    value: 4,
+    label: defaultTime / 60 + ' Minutes',
+    value: defaultTime,
   });
   const [breakSelected, setBreakSelected] = useState({
-    label: '1 Minute',
-    value: 5,
+    label: defaultBreak
+      ? defaultBreak / 60 + ' Minute' + (defaultBreak !== 60 ? 's' : '')
+      : 'No Break',
+    value: defaultBreak,
   });
 
   const [
-    { time, run, inSession, pomodoro, breakTime, autostart, alarm, ticking },
+    {
+      time,
+      run,
+      inSession,
+      count,
+      pomodoro,
+      breakTime,
+      autostart,
+      alarm,
+      ticking,
+    },
     dispatch,
   ] = useTimer();
 
@@ -39,7 +51,7 @@ export default function Timer({ user }) {
   );
 
   const breakOptions = [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30].map((m) => ({
-    label: m === 0 ? 'No break' : `${m} Minute${m > 1 ? 's' : ''}`,
+    label: m === 0 ? 'No Break' : `${m} Minute${m > 1 ? 's' : ''}`,
     value: m * 60,
   }));
 
@@ -55,10 +67,10 @@ export default function Timer({ user }) {
 
   return (
     <div className={styles.timer}>
-      <Clock time={time} totalTime={inSession ? pomodoro : breakTime} />
       <div className={styles.status}>
-        {run ? (inSession ? 'IN SESSION' : 'ON BREAK') : 'INACTIVE'}
+        {inSession ? 'SESSION ' + (count + 1) : 'BREAK'}
       </div>
+      <Clock time={time} totalTime={inSession ? pomodoro : breakTime} />
       <div className={styles.controlBtns}>
         <button
           className={styles.btnStart}
