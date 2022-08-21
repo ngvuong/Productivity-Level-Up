@@ -5,6 +5,7 @@ import {
   createContext,
   useContext,
   cloneElement,
+  Children,
 } from 'react';
 
 const timerContext = createContext();
@@ -26,6 +27,11 @@ const timerReducer = (state, action) => {
         ...state,
         time: action.time,
       };
+    case 'SET_TOTAL_TIME':
+      return {
+        ...state,
+        totalTime: action.totalTime,
+      };
     case 'SET_COUNT':
       return {
         ...state,
@@ -40,26 +46,36 @@ const timerReducer = (state, action) => {
       return {
         ...state,
         pomodoro: action.pomodoro,
+        change: 'pomodoro',
       };
     case 'SET_BREAKTIME':
       return {
         ...state,
         breakTime: action.breakTime,
+        change: 'breakTime',
       };
     case 'SET_AUTOSTART':
       return {
         ...state,
         autostart: action.autostart,
+        change: 'autostart',
       };
     case 'SET_ALARM':
       return {
         ...state,
         alarm: action.alarm,
+        change: 'alarm',
       };
     case 'SET_TICKING':
       return {
         ...state,
         ticking: action.ticking,
+        change: 'ticking',
+      };
+    case 'CLEAR_CHANGE':
+      return {
+        ...state,
+        change: '',
       };
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
@@ -67,36 +83,35 @@ const timerReducer = (state, action) => {
 };
 
 export const TimerProvider = ({ user, children }) => {
-  const [state, dispatch] = useReducer(
-    timerReducer,
-    {
-      time: 4,
-      run: false,
-      pomodoro: 4,
-      breakTime: 5,
-      count: 0,
-      inSession: true,
-      autostart: false,
-      alarm: true,
-      ticking: true,
-    }
-    // initialState
-  );
+  const [state, dispatch] = useReducer(timerReducer, {
+    time: user.settings.time ? user.settings.time : user.settings.pomodoro,
+    run: false,
+    totalTime: 0,
+    count: 0,
+    inSession: true,
+    pomodoro: user.settings.pomodoro,
+    breakTime: user.settings.breakTime,
+    autostart: user.settings.autostart,
+    alarm: user.settings.alarm,
+    ticking: user.settings.ticking,
+  });
 
   const alarmRef = useRef(null);
   const tickingRef = useRef(null);
-  // console.log(user);
+  const unmountRef = useRef(false);
 
   const {
     time,
     run,
-    pomodoro,
-    breakTime,
+    totalTime,
     count,
     inSession,
+    pomodoro,
+    breakTime,
     autostart,
     alarm,
     ticking,
+    change,
   } = state;
 
   useEffect(() => {
@@ -121,13 +136,32 @@ export const TimerProvider = ({ user, children }) => {
   }, [run, time]);
 
   useEffect(() => {
+    return () => {
+      unmountRef.current++;
+      console.log(unmountRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log(unmountRef.current);
+    if (unmountRef.current > 1) {
+      return () => {
+        console.log(time);
+      };
+    }
+  }, [time]);
+
+  useEffect(() => {
     if (run && time === 0) {
       if (alarmRef.current) alarmRef.current.play();
 
       const timeout = setTimeout(() => {
         const timeNext = breakTime && inSession ? breakTime : pomodoro;
 
-        if (inSession) dispatch({ type: 'SET_COUNT', count: count + 1 });
+        if (inSession) {
+          dispatch({ type: 'SET_TOTAL_TIME', totalTime: totalTime + pomodoro });
+          dispatch({ type: 'SET_COUNT', count: count + 1 });
+        }
 
         dispatch({ type: 'SET_TIME', time: timeNext });
 
@@ -138,13 +172,33 @@ export const TimerProvider = ({ user, children }) => {
 
       return () => clearTimeout(timeout);
     }
-  }, [time, run, count, inSession, pomodoro, breakTime, autostart]);
+  }, [time, run, totalTime, count, inSession, pomodoro, breakTime, autostart]);
+
+  useEffect(() => {
+    if (change) {
+      (async function update() {
+        const result = await fetch(`api/user/${user.id}/settings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            [change]: state[change],
+          }),
+        }).then((res) => res.json());
+
+        if (result.error) console.error(result.error);
+
+        if (result.message) dispatch({ type: 'CLEAR_CHANGE' });
+      })();
+    }
+  }, [state, change]);
 
   const value = [state, dispatch];
 
   return (
     <timerContext.Provider value={value}>
-      {cloneElement(children, { user })}
+      {Children.toArray(children).map((child) => cloneElement(child, { user }))}
     </timerContext.Provider>
   );
 };
