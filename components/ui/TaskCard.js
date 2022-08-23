@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import CustomSelect from '../ui/CustomSelect';
 import useProjects from '../../hooks/useProjects';
@@ -32,20 +32,25 @@ const TaskCard = forwardRef(
 
     const { tags, setTags } = useTags(userId, { revalidateOnMount: true });
 
-    const taskOptions =
+    const taskOptions = useRef(
       tasks &&
-      [...tasks]
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((task) => ({
-          label: task.name,
-          value: task.id,
-        }));
+        [...tasks]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((task) => ({
+            label: task.name,
+            value: task.id,
+          }))
+    );
 
     const priorityOptions = [
       { label: 'Low', value: 'P3' },
       { label: 'Medium', value: 'P2' },
       { label: 'High', value: 'P1' },
     ];
+
+    useEffect(() => {
+      return () => setTaskDetails(defaultDetails);
+    }, [setTaskDetails, defaultDetails]);
 
     useEffect(() => {
       if (projects && !projectOptions.length) {
@@ -65,16 +70,7 @@ const TaskCard = forwardRef(
 
         setTagOptions(options);
       }
-
-      return () => setTaskDetails(defaultDetails);
-    }, [
-      projects,
-      projectOptions,
-      tags,
-      tagOptions,
-      setTaskDetails,
-      defaultDetails,
-    ]);
+    }, [projects, projectOptions, tags, tagOptions]);
 
     const onNewProject = async (project) => {
       const name = project
@@ -221,7 +217,7 @@ const TaskCard = forwardRef(
                 <h2>Add or Select Task</h2>
                 <CustomSelect
                   name='task'
-                  options={taskOptions}
+                  options={taskOptions.current}
                   onInputChange={onDetailChange}
                   isClearable
                 />
