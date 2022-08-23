@@ -16,6 +16,7 @@ const timerReducer = (state, action) => {
       return {
         ...state,
         run: true,
+        skip: false,
       };
     case 'STOP_TIMER':
       return {
@@ -26,6 +27,11 @@ const timerReducer = (state, action) => {
       return {
         ...state,
         time: action.time,
+      };
+    case 'SKIP_TIME':
+      return {
+        ...state,
+        skip: true,
       };
     case 'SET_TOTAL_TIME':
       return {
@@ -83,26 +89,31 @@ const timerReducer = (state, action) => {
 };
 
 export const TimerProvider = ({ user, children }) => {
-  const [state, dispatch] = useReducer(timerReducer, {
-    time: user.settings.time ? user.settings.time : user.settings.pomodoro,
-    run: false,
-    totalTime: 0,
-    count: 0,
-    inSession: true,
-    pomodoro: user.settings.pomodoro,
-    breakTime: user.settings.breakTime,
-    autostart: user.settings.autostart,
-    alarm: user.settings.alarm,
-    ticking: user.settings.ticking,
-  });
-
-  const alarmRef = useRef(null);
-  const tickingRef = useRef(null);
-  const unmountRef = useRef(false);
+  const [state, dispatch] = useReducer(
+    timerReducer,
+    user
+      ? {
+          time: user.settings.time
+            ? user.settings.time
+            : user?.settings?.pomodoro,
+          run: false,
+          skip: false,
+          totalTime: 0,
+          count: 0,
+          inSession: true,
+          pomodoro: user.settings.pomodoro,
+          breakTime: user.settings.breakTime,
+          autostart: user.settings.autostart,
+          alarm: user.settings.alarm,
+          ticking: user.settings.ticking,
+        }
+      : {}
+  );
 
   const {
     time,
     run,
+    skip,
     totalTime,
     count,
     inSession,
@@ -113,6 +124,10 @@ export const TimerProvider = ({ user, children }) => {
     ticking,
     change,
   } = state;
+
+  const alarmRef = useRef(null);
+  const tickingRef = useRef(null);
+  const timeRef = useRef(time);
 
   useEffect(() => {
     if (alarm) {
@@ -125,54 +140,47 @@ export const TimerProvider = ({ user, children }) => {
   }, [alarm, ticking]);
 
   useEffect(() => {
-    if (run && time > 0) {
+    if (run) {
       const interval = setInterval(() => {
-        if (tickingRef.current) tickingRef.current.play();
-        dispatch({ type: 'SET_TIME', time: time - 1 });
+        if (timeRef.current > 0) {
+          if (tickingRef.current) tickingRef.current.play();
+
+          timeRef.current--;
+          dispatch({ type: 'SET_TIME', time: timeRef.current });
+        } else clearInterval(interval);
       }, 1000);
+
+      if (timeRef.current === 0) return () => clearInterval(interval);
 
       return () => clearInterval(interval);
     }
-  }, [run, time]);
+  }, [run]);
 
   useEffect(() => {
-    return () => {
-      unmountRef.current++;
-      console.log(unmountRef.current);
-    };
-  }, []);
+    if (time === 0 || skip) {
+      if (alarmRef.current && !skip) alarmRef.current.play();
 
-  useEffect(() => {
-    console.log(unmountRef.current);
-    if (unmountRef.current > 1) {
-      return () => {
-        console.log(time);
-      };
-    }
-  }, [time]);
-
-  useEffect(() => {
-    if (run && time === 0) {
-      if (alarmRef.current) alarmRef.current.play();
+      dispatch({ type: 'STOP_TIMER' });
 
       const timeout = setTimeout(() => {
         const timeNext = breakTime && inSession ? breakTime : pomodoro;
 
-        if (inSession) {
+        if (inSession && !skip) {
           dispatch({ type: 'SET_TOTAL_TIME', totalTime: totalTime + pomodoro });
           dispatch({ type: 'SET_COUNT', count: count + 1 });
         }
+        timeRef.current = timeNext;
 
         dispatch({ type: 'SET_TIME', time: timeNext });
 
         dispatch({ type: 'SET_IN_SESSION' });
 
-        if (!autostart) dispatch({ type: 'STOP_TIMER' });
+        if (autostart) dispatch({ type: 'START_TIMER' });
       }, 1000);
 
       return () => clearTimeout(timeout);
     }
-  }, [time, run, totalTime, count, inSession, pomodoro, breakTime, autostart]);
+  }, [time, skip, totalTime, count, inSession, pomodoro, breakTime, autostart]);
 
   useEffect(() => {
     if (change) {
@@ -193,13 +201,30 @@ export const TimerProvider = ({ user, children }) => {
       })();
     }
   }, [state, change]);
+  console.log(timeRef.current);
+  useEffect(() => {
+    console.log(timeRef.current);
+    return () => {
+      console.log('unmount');
+      fetch(`api/user/${user.id}/settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          time: timeRef.current,
+        }),
+      }).then((res) => {
+        const data = res.json();
+        if (data.error) console.error(result.error);
+      });
+    };
+  }, []);
 
   const value = [state, dispatch];
 
   return (
-    <timerContext.Provider value={value}>
-      {Children.toArray(children).map((child) => cloneElement(child, { user }))}
-    </timerContext.Provider>
+    <timerContext.Provider value={value}>{children}</timerContext.Provider>
   );
 };
 
