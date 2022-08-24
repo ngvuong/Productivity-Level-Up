@@ -93,9 +93,7 @@ export const TimerProvider = ({ user, children }) => {
     timerReducer,
     user
       ? {
-          time: user.settings.time
-            ? user.settings.time
-            : user?.settings?.pomodoro,
+          time: user.settings.time || user.settings.pomodoro,
           run: false,
           skip: false,
           totalTime: 0,
@@ -145,7 +143,7 @@ export const TimerProvider = ({ user, children }) => {
         if (timeRef.current > 0) {
           if (tickingRef.current) tickingRef.current.play();
 
-          timeRef.current--;
+          timeRef.current = timeRef.current - 1;
           dispatch({ type: 'SET_TIME', time: timeRef.current });
         } else clearInterval(interval);
       }, 1000);
@@ -201,25 +199,56 @@ export const TimerProvider = ({ user, children }) => {
       })();
     }
   }, [state, change]);
-  console.log(timeRef.current);
   useEffect(() => {
-    console.log(timeRef.current);
+    const saveTime = async () => {
+      if (timeRef.current) {
+        const data = await fetch(`api/user/${user.id}/settings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            time: timeRef.current,
+          }),
+        }).then((res) => res.json());
+
+        if (data.error) console.error(data.error);
+      }
+    };
+    console.log('hi');
+    window.addEventListener('beforeunload', saveTime);
     return () => {
-      console.log('unmount');
-      fetch(`api/user/${user.id}/settings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          time: timeRef.current,
-        }),
-      }).then((res) => {
-        const data = res.json();
-        if (data.error) console.error(result.error);
-      });
+      // if (unmountRef.current) console.log(unmountRef.current);
+      // saveTime();
+      console.log('bye');
+      window.removeEventListener('beforeunload', saveTime);
     };
   }, []);
+  // useEffect(() => {
+  //   localStorage.setItem('time', time);
+  // }, [time]);
+
+  // useEffect(() => {
+  //   // const time = timeRef.current;
+  //   // if (time % 1 === 0) {
+  //   // return () => {
+  //   console.log(localStorage.getItem('time'));
+  //   fetch(`api/user/${user.id}/settings`, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({
+  //       time,
+  //     }),
+  //   }).then((res) => {
+  //     const data = res.json();
+  //     // if (data.error) console.error(result.error);
+  //     data.then((msg) => console.log(msg));
+  //   });
+  //   // };
+  //   // }
+  // }, []);
 
   const value = [state, dispatch];
 
