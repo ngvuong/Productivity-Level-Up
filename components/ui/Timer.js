@@ -55,16 +55,6 @@ export default function Timer({ defaultTime, defaultBreak }) {
     value: m * 60,
   }));
 
-  const onSkip = () => {
-    const timeNext = breakTime && inSession ? breakTime : pomodoro;
-
-    dispatch({ type: 'SET_TIME', time: timeNext });
-
-    dispatch({ type: 'SET_IN_SESSION' });
-
-    if (!autostart) dispatch({ type: 'STOP_TIMER' });
-  };
-
   return (
     <div className={styles.timer}>
       <div className={styles.status}>
@@ -82,7 +72,10 @@ export default function Timer({ defaultTime, defaultBreak }) {
         >
           {run ? <MdPause /> : <MdPlayArrow />}
         </button>
-        <button className={styles.btnSkip} onClick={onSkip}>
+        <button
+          className={styles.btnSkip}
+          onClick={() => dispatch({ type: 'SKIP_TIME' })}
+        >
           <MdSkipNext />
         </button>
       </div>
