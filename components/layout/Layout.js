@@ -1,33 +1,24 @@
 import { useEffect, cloneElement } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Overlay from './Overlay';
-import Spinner from './Spinner';
+import Navbar from '../ui/Navbar';
 import { useUser } from '../../contexts/userContext';
 
 import styles from '../../styles/Layout.module.scss';
 
 export default function Layout({ children }) {
-  const { user, status } = useUser();
+  const { user } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'unauthenticated' && router.pathname !== '/') {
+    if (!user && router.pathname !== '/') {
       router.replace('/');
     }
 
-    if (status === 'authenticated' && router.pathname === '/') {
+    if (user && router.pathname === '/') {
       router.replace('/home');
     }
-  }, [status, router]);
-
-  if (status === 'loading') {
-    return (
-      <Overlay>
-        <Spinner />
-      </Overlay>
-    );
-  }
+  }, [user, router]);
 
   return (
     <>
@@ -47,8 +38,9 @@ export default function Layout({ children }) {
       <div className={styles.container}>
         {router.pathname !== '/'
           ? user && cloneElement(children, { user })
-          : status === 'unauthenticated' && children}
+          : !user && children}
       </div>
+      {user && <Navbar />}
     </>
   );
 }
