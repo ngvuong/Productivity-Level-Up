@@ -5,6 +5,8 @@ import {
   createContext,
   useContext,
 } from 'react';
+import { format } from 'date-fns';
+import usePomodoros from '../hooks/usePomodoros';
 
 const timerContext = createContext();
 
@@ -84,11 +86,11 @@ const timerReducer = (state, action) => {
 
 export const TimerProvider = ({ user, children }) => {
   const { id, userId, ...settings } = user?.settings || {};
-  const [state, dispatch] = useReducer(timerReducer, {
-    ...settings,
-    count: 0,
-    totalTime: 0,
+  const { pomodoros, setPomodoros } = usePomodoros(userId, {
+    fallbackData: user?.pomos,
   });
+
+  const [state, dispatch] = useReducer(timerReducer, settings);
 
   const {
     time,
@@ -106,6 +108,22 @@ export const TimerProvider = ({ user, children }) => {
 
   const alarmRef = useRef(null);
   const tickingRef = useRef(null);
+
+  useEffect(() => {
+    if (pomodoros) {
+      const today = format(new Date(), 'MM-dd-yyyy');
+      const pomodorosToday = pomodoros.filter((pomo) => pomo.date === today);
+
+      const totalTime = pomodorosToday.reduce(
+        (sum, curr) => sum + curr.duration,
+        0
+      );
+      const count = pomodorosToday.length;
+
+      dispatch({ type: 'SET_TOTAL_TIME', totalTime });
+      dispatch({ type: 'SET_COUNT', count });
+    }
+  }, [pomodoros]);
 
   useEffect(() => {
     if (alarm) {
@@ -135,11 +153,26 @@ export const TimerProvider = ({ user, children }) => {
 
       const timeout = setTimeout(() => {
         const shouldSwitch = breakTime && inSession;
+
         const timeNext = shouldSwitch ? breakTime : pomodoro;
 
         if (inSession) {
-          dispatch({ type: 'SET_TOTAL_TIME', totalTime: totalTime + pomodoro });
-          dispatch({ type: 'SET_COUNT', count: count + 1 });
+          const savePomodoro = async () => {
+            const result = await fetch(`api/user/${user.id}/pomodoros`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                date: format(new Date() - pomodoro * 1000, 'MM-dd-yyyy'),
+                duration: pomodoro,
+              }),
+            }).then((res) => res.json());
+
+            if (result.error) console.error(result.error);
+
+            if (result.ok) setPomodoros();
+          };
+
+          savePomodoro();
         }
 
         dispatch({ type: 'SET_TIME', time: timeNext });
@@ -151,18 +184,25 @@ export const TimerProvider = ({ user, children }) => {
 
       return () => clearTimeout(timeout);
     }
-  }, [time, totalTime, count, inSession, pomodoro, breakTime, autostart]);
+
+    if (time === null) {
+      dispatch({
+        type: 'SET_TIME',
+        time: breakTime && !inSession ? breakTime : pomodoro,
+      });
+    }
+  }, [time, totalTime, count, inSession, pomodoro, breakTime, autostart, user]);
 
   useEffect(() => {
     if (change) {
-      const update = async () => {
+      const update = async (setting = change) => {
         const result = await fetch(`api/user/${user.id}/settings`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            [change]: state[change],
+            [setting]: state[setting],
           }),
         }).then((res) => res.json());
 
@@ -171,10 +211,17 @@ export const TimerProvider = ({ user, children }) => {
         if (result.ok) dispatch({ type: 'CLEAR_CHANGE' });
       };
 
-      if (change !== 'time') update();
+      if (change !== 'time') {
+        update();
 
-      window.addEventListener('beforeunload', update);
-      return () => window.removeEventListener('beforeunload', update);
+        if (change === 'inSession') update('time');
+      } else {
+        const boundUpdate = update.bind(null, 'time');
+
+        window.addEventListener('beforeunload', boundUpdate);
+
+        return () => window.removeEventListener('beforeunload', boundUpdate);
+      }
     }
   }, [state, change, user]);
 
