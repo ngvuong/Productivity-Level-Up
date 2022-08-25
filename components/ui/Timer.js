@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Select from 'react-select';
 import Clock from './Clock';
 import { useTimer } from '../../contexts/timerContext';
@@ -43,17 +43,31 @@ export default function Timer({ defaultTime, defaultBreak }) {
     dispatch,
   ] = useTimer();
 
-  const timeOptions = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(
-    (m) => ({
+  const timeOptionsRef = useRef(
+    [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((m) => ({
       label: `${m} Minutes`,
       value: m * 60,
-    })
+    }))
   );
 
-  const breakOptions = [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30].map((m) => ({
-    label: m === 0 ? 'No Break' : `${m} Minute${m > 1 ? 's' : ''}`,
-    value: m * 60,
-  }));
+  const breakOptionsRef = useRef(
+    [0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 30].map((m) => ({
+      label: m === 0 ? 'No Break' : `${m} Minute${m > 1 ? 's' : ''}`,
+      value: m * 60,
+    }))
+  );
+
+  const onSkip = () => {
+    const shouldSwitch = breakTime && inSession;
+
+    const timeNext = shouldSwitch ? breakTime : pomodoro;
+
+    dispatch({ type: 'SET_TIME', time: timeNext });
+
+    if (shouldSwitch || !inSession) dispatch({ type: 'SET_IN_SESSION' });
+
+    if (!autostart) dispatch({ type: 'STOP_TIMER' });
+  };
 
   return (
     <div className={styles.timer}>
@@ -72,10 +86,7 @@ export default function Timer({ defaultTime, defaultBreak }) {
         >
           {run ? <MdPause /> : <MdPlayArrow />}
         </button>
-        <button
-          className={styles.btnSkip}
-          onClick={() => dispatch({ type: 'SKIP_TIME' })}
-        >
+        <button className={styles.btnSkip} onClick={onSkip}>
           <MdSkipNext />
         </button>
       </div>
@@ -91,9 +102,10 @@ export default function Timer({ defaultTime, defaultBreak }) {
                   dispatch({ type: 'SET_POMODORO', pomodoro: option.value });
                 }
               }}
-              options={timeOptions}
+              options={timeOptionsRef.current}
               isSearchable={false}
               isDisabled={inSession}
+              isOptionDisabled={(option) => timeSelected.value === option.value}
               styles={timeSelectStyles}
             />
           </label>
@@ -111,9 +123,12 @@ export default function Timer({ defaultTime, defaultBreak }) {
                   });
                 }
               }}
-              options={breakOptions}
+              options={breakOptionsRef.current}
               isSearchable={false}
               isDisabled={!inSession}
+              isOptionDisabled={(option) =>
+                breakSelected.value === option.value
+              }
               styles={timeSelectStyles}
             />
           </label>
