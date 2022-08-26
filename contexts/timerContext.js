@@ -44,6 +44,12 @@ const timerReducer = (state, action) => {
         inSession: state.breakTime ? !state.inSession : true,
         change: 'inSession',
       };
+    case 'SET_TASK':
+      return {
+        ...state,
+        task: action.task,
+        change: 'task',
+      };
     case 'SET_POMODORO':
       return {
         ...state,
@@ -98,6 +104,7 @@ export const TimerProvider = ({ user, children }) => {
     totalTime,
     count,
     inSession,
+    task,
     pomodoro,
     breakTime,
     autostart,
@@ -166,6 +173,7 @@ export const TimerProvider = ({ user, children }) => {
               body: JSON.stringify({
                 date: format(new Date() - pomodoro * 1000, 'yyyy-MM-dd'),
                 duration: pomodoro,
+                taskId: task,
               }),
             }).then((res) => res.json());
 
