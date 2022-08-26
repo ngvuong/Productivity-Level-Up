@@ -25,6 +25,7 @@ const TaskCard = forwardRef(
     const [projectOptions, setProjectOptions] = useState([]);
     const [tagOptions, setTagOptions] = useState([]);
     const [defaultDetails, setDefaultDetails] = useState(taskDetails);
+    const [errors, setErrors] = useState({ name: '', project: '', tags: '' });
 
     const { projects, setProjects } = useProjects(userId, {
       revalidateOnMount: true,
@@ -36,10 +37,13 @@ const TaskCard = forwardRef(
       tasks &&
         [...tasks]
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map((task) => ({
-            label: task.name,
-            value: task.id,
-          }))
+          .reduce((acc, curr) => {
+            const isUnique = !acc.some((option) => option.label === curr.name);
+
+            if (isUnique) acc.push({ label: curr.name, value: curr.id });
+
+            return acc;
+          }, [])
     );
 
     const priorityOptions = [
@@ -48,12 +52,14 @@ const TaskCard = forwardRef(
       { label: 'High', value: 'P1' },
     ];
 
+    const today = format(new Date(), 'yyyy-MM-dd');
+
     useEffect(() => {
       return () => setTaskDetails(defaultDetails);
     }, [setTaskDetails, defaultDetails]);
 
     useEffect(() => {
-      if (projects && !projectOptions.length) {
+      if (projects?.length && !projectOptions.length) {
         const options = projects.map((project) => ({
           label: project.name,
           value: project.id,
@@ -62,7 +68,7 @@ const TaskCard = forwardRef(
         setProjectOptions(options);
       }
 
-      if (tags && !tagOptions.length) {
+      if (tags?.length && !tagOptions.length) {
         const options = tags.map((tag) => ({
           label: tag.name,
           value: tag.id,
@@ -78,6 +84,9 @@ const TaskCard = forwardRef(
         .split(' ')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
+
+      if (name.length > 30)
+        return setErrors({ ...errors, project: 'Exceeded 30 characters' });
 
       const data = await fetch(`/api/user/${userId}/projects`, {
         method: 'POST',
@@ -104,6 +113,9 @@ const TaskCard = forwardRef(
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
+      if (name.length > 30)
+        return setErrors({ ...errors, tags: 'Exceeded 30 characters' });
+
       const data = await fetch(`/api/user/${userId}/tags`, {
         method: 'POST',
         headers: {
@@ -123,7 +135,11 @@ const TaskCard = forwardRef(
     };
 
     const onDetailChange = (target) => {
-      if (target.name === 'task') {
+      if (target.name === 'name' && target.value.length > 30) {
+        setErrors({ ...errors, name: 'Exceeded 30 characters' });
+      } else if (target.name === 'date' && target.value < today) {
+        return;
+      } else if (target.name === 'task') {
         const task = tasks.find((task) => task.id === target.value);
 
         if (!task) return setTaskDetails(defaultDetails);
@@ -132,10 +148,11 @@ const TaskCard = forwardRef(
           ...task,
           project: task?.project?.id,
           tags: task.tags.map((tag) => tag.id),
-          date: format(new Date(), 'yyyy-MM-dd'),
+          date: today,
         });
       } else {
         setTaskDetails({ ...taskDetails, [target.name]: target.value });
+        setErrors({ ...errors, [target.name]: '' });
       }
     };
 
@@ -223,38 +240,49 @@ const TaskCard = forwardRef(
                 />
               </>
             )}
-            <input
-              type='text'
-              name='name'
-              value={taskDetails.name}
-              onChange={(e) => onDetailChange(e.target)}
-              placeholder='Task name'
-            />
+            <div className={styles.name}>
+              <span className={styles.error}>{errors.name}</span>
+              <input
+                type='text'
+                name='name'
+                value={taskDetails.name}
+                onChange={(e) => onDetailChange(e.target)}
+                maxLength='30'
+                placeholder='Task name'
+              />
+            </div>
             <label>
               Project
-              <CustomSelect
-                name='project'
-                options={projectOptions}
-                onCreateNew={onNewProject}
-                onInputChange={onDetailChange}
-                defaultValue={
-                  projectOptions.find((p) => p.value === taskDetails.project) ||
-                  null
-                }
-              />
+              <div className={styles.wrapper}>
+                <span className={styles.error}>{errors.project}</span>
+                <CustomSelect
+                  name='project'
+                  options={projectOptions}
+                  onCreateNew={onNewProject}
+                  onInputChange={onDetailChange}
+                  defaultValue={
+                    projectOptions.find(
+                      (p) => p.value === taskDetails.project
+                    ) || null
+                  }
+                />
+              </div>
             </label>
             <label>
               Tags
-              <CustomSelect
-                name='tags'
-                options={tagOptions}
-                onCreateNew={onNewTag}
-                onInputChange={onDetailChange}
-                defaultValue={tagOptions.filter((o) =>
-                  taskDetails.tags.some((t) => t === o.value)
-                )}
-                multiple
-              />
+              <div className={styles.wrapper}>
+                <span className={styles.error}>{errors.tags}</span>
+                <CustomSelect
+                  name='tags'
+                  options={tagOptions}
+                  onCreateNew={onNewTag}
+                  onInputChange={onDetailChange}
+                  defaultValue={tagOptions.filter((o) =>
+                    taskDetails.tags.some((t) => t === o.value)
+                  )}
+                  multiple
+                />
+              </div>
             </label>
             <label>
               Priority
@@ -278,6 +306,7 @@ const TaskCard = forwardRef(
                 name='date'
                 value={taskDetails.date}
                 onChange={(e) => onDetailChange(e.target)}
+                min={today}
               />
             </label>
             <label>
