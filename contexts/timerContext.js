@@ -111,7 +111,8 @@ export const TimerProvider = ({ user, children }) => {
 
   useEffect(() => {
     if (pomodoros) {
-      const today = format(new Date(), 'MM-dd-yyyy');
+      const today = format(new Date(), 'yyyy-MM-dd');
+
       const pomodorosToday = pomodoros.filter((pomo) => pomo.date === today);
 
       const totalTime = pomodorosToday.reduce(
@@ -121,6 +122,7 @@ export const TimerProvider = ({ user, children }) => {
       const count = pomodorosToday.length;
 
       dispatch({ type: 'SET_TOTAL_TIME', totalTime });
+
       dispatch({ type: 'SET_COUNT', count });
     }
   }, [pomodoros]);
@@ -162,7 +164,7 @@ export const TimerProvider = ({ user, children }) => {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                date: format(new Date() - pomodoro * 1000, 'MM-dd-yyyy'),
+                date: format(new Date() - pomodoro * 1000, 'yyyy-MM-dd'),
                 duration: pomodoro,
               }),
             }).then((res) => res.json());
