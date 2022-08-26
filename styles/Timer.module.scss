@@ -41,13 +41,24 @@
   .configs {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 2rem;
+
+    &Task {
+      display: flex;
+      justify-content: center;
+
+      .task {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 2.5rem;
+      }
+    }
 
     &Time {
       display: flex;
       gap: 1rem;
-      width: 100%;
 
       .time,
       .break {
@@ -55,15 +66,14 @@
         flex-direction: column;
         align-items: center;
         gap: 0.5rem;
-        font-size: 2rem;
+        font-size: 2.5rem;
       }
     }
 
     &Misc {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-column-gap: 2rem;
-      width: 100%;
+      grid-column-gap: 5rem;
 
       div {
         display: flex;
@@ -71,7 +81,7 @@
         align-items: center;
 
         label {
-          font-size: 2rem;
+          font-size: 2.5rem;
         }
       }
 
@@ -82,22 +92,22 @@
           position: relative;
           display: flex;
           align-items: center;
-          width: 4rem;
-          height: 2rem;
+          width: 6rem;
+          height: 3rem;
           background: var(--color-button-2);
-          border-radius: 1rem;
+          border-radius: 2rem;
           cursor: pointer;
 
           &:active::after {
-            width: 2.2rem;
+            width: 3rem;
           }
 
           &::after {
             content: ' ';
             position: absolute;
-            left: 0.2rem;
-            width: 1.6rem;
-            height: 1.6rem;
+            left: 0.4rem;
+            width: 2.5rem;
+            height: 2.5rem;
             background: var(--color-tertiary-1);
             border-radius: 2rem;
             transition: all 0.2s;
@@ -108,7 +118,7 @@
           background: var(--color-button-4);
 
           &::after {
-            left: calc(100% - 0.2rem);
+            left: calc(100% - 0.4rem);
             transform: translateX(-100%);
           }
         }
