@@ -1,6 +1,6 @@
 .taskCard {
   position: absolute;
-  top: 50%;
+  top: 40%;
   left: 50%;
   width: 60%;
   height: 30rem;
@@ -36,11 +36,17 @@
       border-radius: 1rem;
       backface-visibility: hidden;
 
-      & > input {
+      .name {
         align-self: center;
-        text-align: center;
-        border: 1px solid var(--color-alt-3);
-        border-radius: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        input {
+          text-align: center;
+          border: 1px solid var(--color-alt-3);
+          border-radius: 1rem;
+        }
       }
 
       label {
@@ -51,6 +57,13 @@
         font-weight: bold;
         padding: 0.5rem;
         border-bottom: 1px solid var(--color-alt-3);
+
+        .wrapper {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 1rem;
+        }
 
         input[type='date'] {
           color: var(--color-tertiary-1);
@@ -88,6 +101,12 @@
         background-color: var(--color-highlight);
         padding: 0.5rem;
         border-radius: 0.5rem;
+      }
+
+      .error {
+        color: var(--color-danger);
+        font-size: 1rem;
+        text-align: center;
       }
     }
 
