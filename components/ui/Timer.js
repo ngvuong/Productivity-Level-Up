@@ -1,12 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Select from 'react-select';
 import Clock from './Clock';
 import { useTimer } from '../../contexts/timerContext';
+import useTasksByDate from '../../hooks/useTasksByDate';
 
 import {
   MdPlayArrow,
   MdPause,
   MdSkipNext,
+  MdTaskAlt,
   MdAccessTimeFilled,
   MdCoffee,
   MdAutorenew,
@@ -16,24 +18,14 @@ import {
 import { timeSelectStyles } from '../../lib/selectStyles';
 import styles from '../../styles/Timer.module.scss';
 
-export default function Timer({ defaultTime, defaultBreak }) {
-  const [timeSelected, setTimeSelected] = useState({
-    label: defaultTime / 60 + ' Minutes',
-    value: defaultTime,
-  });
-  const [breakSelected, setBreakSelected] = useState({
-    label: defaultBreak
-      ? defaultBreak / 60 + ' Minute' + (defaultBreak !== 60 ? 's' : '')
-      : 'No Break',
-    value: defaultBreak,
-  });
-
+export default function Timer({ userId }) {
   const [
     {
       time,
       run,
       inSession,
       count,
+      task,
       pomodoro,
       breakTime,
       autostart,
@@ -42,6 +34,23 @@ export default function Timer({ defaultTime, defaultBreak }) {
     },
     dispatch,
   ] = useTimer();
+
+  const [taskSelected, setTaskSelected] = useState();
+  const [timeSelected, setTimeSelected] = useState({
+    label: pomodoro / 60 + ' Minutes',
+    value: pomodoro,
+  });
+  const [breakSelected, setBreakSelected] = useState({
+    label: breakTime
+      ? breakTime / 60 + ' Minute' + (breakTime !== 60 ? 's' : '')
+      : 'No Break',
+    value: breakTime,
+  });
+  const [taskOptions, setTaskOptions] = useState([]);
+
+  const { tasks } = useTasksByDate(userId, 'today', {
+    revalidateOnMount: true,
+  });
 
   const timeOptionsRef = useRef(
     [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((m) => ({
@@ -56,6 +65,24 @@ export default function Timer({ defaultTime, defaultBreak }) {
       value: m * 60,
     }))
   );
+
+  useEffect(() => {
+    if (tasks) {
+      setTaskOptions(
+        tasks.map((task) => ({
+          label: task.name,
+          value: task.id,
+        }))
+      );
+
+      if (task) {
+        const targetTask = tasks.find((t) => t.id === task);
+
+        if (targetTask)
+          setTaskSelected({ label: targetTask.name, value: targetTask.id });
+      }
+    }
+  }, [tasks]);
 
   const onSkip = () => {
     const shouldSwitch = breakTime && inSession;
@@ -91,6 +118,26 @@ export default function Timer({ defaultTime, defaultBreak }) {
         </button>
       </div>
       <div className={styles.configs}>
+        <div className={styles.configsTask}>
+          <label className={styles.task}>
+            <MdTaskAlt />
+            <Select
+              value={taskSelected}
+              onChange={(option) => {
+                setTaskSelected(option);
+                dispatch({ type: 'SET_TASK', task: option?.value || '' });
+              }}
+              options={taskOptions}
+              isOptionDisabled={(option) =>
+                taskSelected?.value === option.value
+              }
+              menuPlacement='top'
+              isClearable
+              placeholder='Select task'
+              styles={timeSelectStyles}
+            />
+          </label>
+        </div>
         <div className={styles.configsTime}>
           <label className={styles.time}>
             <MdAccessTimeFilled />
@@ -106,10 +153,10 @@ export default function Timer({ defaultTime, defaultBreak }) {
               isSearchable={false}
               isDisabled={inSession}
               isOptionDisabled={(option) => timeSelected.value === option.value}
+              menuPlacement='top'
               styles={timeSelectStyles}
             />
           </label>
-
           <label className={styles.break}>
             <MdCoffee />
             <Select
@@ -129,6 +176,7 @@ export default function Timer({ defaultTime, defaultBreak }) {
               isOptionDisabled={(option) =>
                 breakSelected.value === option.value
               }
+              menuPlacement='top'
               styles={timeSelectStyles}
             />
           </label>
