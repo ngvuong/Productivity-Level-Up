@@ -1,17 +1,19 @@
 .welcome {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  align-items: center;
+  gap: 10rem;
 
   .intro {
     display: flex;
     flex-direction: column;
-    // align-items: center;
+    width: 40vw;
     font-style: italic;
 
     h1 {
       font-size: 4rem;
       color: var(--color-primary);
+      text-shadow: 0.1rem 0 0.1rem var(--color-shadow);
     }
 
     h2 {
