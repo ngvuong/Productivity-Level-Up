@@ -36,8 +36,18 @@ export default NextAuth({
         include: {
           tasks: true,
           projects: true,
+          settings: true,
+          pomos: true,
         },
       });
+
+      if (!currentUser.settings) {
+        await prisma.settings.create({
+          data: {
+            userId: currentUser.id,
+          },
+        });
+      }
 
       session.user = currentUser;
 
