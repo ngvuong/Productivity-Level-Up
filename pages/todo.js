@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import Select from 'react-select';
 import Spinner from '../components/layout/Spinner';
@@ -6,7 +6,7 @@ import Overlay from '../components/layout/Overlay';
 import Task from '../components/main/Task';
 import TaskCard from '../components/ui/TaskCard';
 import useTasks from '../hooks/useTasks';
-import useModalClose from '../hooks/useModalClose';
+import useModal from '../hooks/useModal';
 
 import { FaPlus } from 'react-icons/fa';
 import { dateSelectStyles } from '../lib/selectStyles';
@@ -15,7 +15,7 @@ import styles from '../styles/Todo.module.scss';
 export default function Todo({ user }) {
   const today = format(new Date(), 'yyyy-MM-dd');
   const [selected, setSelected] = useState({ label: 'Today', value: today });
-  const [legacySelected, setLegacySelected] = useState({});
+  const [legacySelected, setLegacySelected] = useState();
   const [showLegacy, setShowLegacy] = useState(false);
   const [taskDetails, setTaskDetails] = useState({
     name: '',
@@ -25,42 +25,60 @@ export default function Todo({ user }) {
     date: today,
     notes: '',
   });
+  const [tasksByDate, setTasksByDate] = useState();
+  const [options, setOptions] = useState([]);
+  const [legacyOptions, setLegacyOptions] = useState([]);
 
   const { tasks, isLoading, setTasks } = useTasks(user.id, {
     revalidateOnMount: true,
   });
 
-  const { triggerRef, nodeRef, show, setShow } = useModalClose(false);
+  const { triggerRef, nodeRef, show, setShow } = useModal(false);
+
+  useEffect(() => {
+    if (tasks) {
+      setTasksByDate(
+        tasks.reduce((acc, task) => {
+          if (!acc[task.date]) {
+            acc[task.date] = [];
+          }
+
+          acc[task.date].push(task);
+
+          return acc;
+        }, {})
+      );
+    }
+  }, [tasks]);
+
+  useEffect(() => {
+    if (tasksByDate) {
+      setOptions(
+        Object.keys(tasksByDate)
+          .filter((date) => date >= today)
+          .sort()
+          .map((date) => ({
+            label:
+              date === today ? 'Today' : format(parseISO(date), 'MMM d, yyyy'),
+            value: date,
+          }))
+      );
+
+      setLegacyOptions(
+        Object.keys(tasksByDate)
+          .filter((date) => date < today)
+          .sort()
+          .map((date) => ({
+            label: format(parseISO(date), 'MMM d, yyyy'),
+            value: date,
+          }))
+      );
+    }
+  }, [tasksByDate, today]);
 
   if (isLoading) {
     return <Spinner />;
   }
-
-  const tasksByDate = tasks.reduce((acc, task) => {
-    if (!acc[task.date]) {
-      acc[task.date] = [];
-    }
-
-    acc[task.date].push(task);
-
-    return acc;
-  }, {});
-
-  const options = Object.keys(tasksByDate)
-    .filter((date) => date >= today)
-    .sort()
-    .map((date) => ({
-      label: date === today ? 'Today' : format(parseISO(date), 'MMM d, yyyy'),
-      value: date,
-    }));
-
-  const legacyOptions = Object.keys(tasksByDate)
-    .filter((date) => date < today)
-    .sort()
-    .map((date) => ({
-      label: format(parseISO(date), 'MMM d, yyyy'),
-      value: date,
-    }));
 
   const getData = () => {
     const { name, project, tags, priority, date, notes } = taskDetails;
@@ -127,26 +145,26 @@ export default function Todo({ user }) {
             onChange={setSelected}
             options={options}
             isSearchable={false}
+            isOptionDisabled={(option) => selected.value === option.value}
             styles={dateSelectStyles}
           />
         </div>
         <div className={styles.tasks}>
           <h3>{selected.label}</h3>
-          {tasksByDate[selected.value]?.map((task) => (
-            <Task key={task.id} task={task} userId={user.id} />
-          ))}
+          {tasksByDate &&
+            tasksByDate[selected.value]?.map((task) => (
+              <Task key={task.id} task={task} userId={user.id} />
+            ))}
         </div>
       </section>
       <button
         className={styles.btnLegacy}
         onClick={() => {
           setShowLegacy(!showLegacy);
-          setLegacySelected(
-            legacySelected.label ? legacySelected : legacyOptions[0]
-          );
+          setLegacySelected(legacySelected ? legacySelected : legacyOptions[0]);
         }}
       >
-        View history
+        View History
       </button>
       {showLegacy && (
         <section className={styles.legacy}>
@@ -157,12 +175,14 @@ export default function Todo({ user }) {
               onChange={setLegacySelected}
               options={legacyOptions}
               isSearchable={false}
+              isOptionDisabled={(option) => legacySelected === option}
+              placeholder='History'
               styles={dateSelectStyles}
             />
           </div>
           <div className={styles.tasks}>
-            <h3>{legacySelected.label}</h3>
-            {tasksByDate[legacySelected.value]?.map((task) => (
+            <h3>{legacySelected?.label}</h3>
+            {tasksByDate[legacySelected?.value]?.map((task) => (
               <Task key={task.id} task={task} userId={user.id} />
             ))}
           </div>
