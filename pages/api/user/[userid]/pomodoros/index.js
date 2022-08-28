@@ -17,8 +17,9 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'POST') {
     try {
-      const { date, duration } = req.body;
-      const data = { userId: userid, date, duration };
+      const { date, duration, taskId } = req.body;
+
+      const data = { userId: userid, date, duration, taskId };
 
       await prisma.pomo.create({
         data,
