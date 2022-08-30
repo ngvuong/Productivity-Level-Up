@@ -5,7 +5,7 @@ import {
   createContext,
   useContext,
 } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO, addDays } from 'date-fns';
 import { useUser } from './userContext';
 import usePomodoros from '../hooks/usePomodoros';
 
@@ -33,11 +33,13 @@ const timerReducer = (state, action) => {
       return {
         ...state,
         totalTime: action.totalTime,
+        change: 'totalTime',
       };
     case 'SET_COUNT':
       return {
         ...state,
         count: action.count,
+        change: 'count',
       };
     case 'SET_IN_SESSION':
       return {
@@ -96,18 +98,18 @@ export const TimerProvider = ({ children }) => {
 
   const { id, userId, ...settings } = user?.settings || {};
 
-  const [state, dispatch] = useReducer(timerReducer, settings);
+  const [state, dispatch] = useReducer(timerReducer, {
+    ...settings,
+    nonZero: user?.streak,
+  });
 
-  const { pomodoros, setPomodoros } = usePomodoros(userId, {
-    fallbackData: user?.pomos,
+  const { pomodoros, setPomodoros } = usePomodoros(userId, 'today', {
     revalidateOnMount: true,
   });
 
   const {
     time,
     run,
-    totalTime,
-    count,
     inSession,
     task,
     pomodoro,
@@ -123,16 +125,9 @@ export const TimerProvider = ({ children }) => {
 
   useEffect(() => {
     if (pomodoros) {
-      const today = format(new Date(), 'yyyy-MM-dd');
+      const totalTime = pomodoros.reduce((sum, curr) => sum + curr.duration, 0);
 
-      const pomodorosToday = pomodoros.filter((pomo) => pomo.date === today);
-
-      const totalTime = pomodorosToday.reduce(
-        (sum, curr) => sum + curr.duration,
-        0
-      );
-
-      const count = pomodorosToday.length;
+      const count = pomodoros.length;
 
       dispatch({ type: 'SET_TOTAL_TIME', totalTime });
 
@@ -175,15 +170,18 @@ export const TimerProvider = ({ children }) => {
 
         if (inSession) {
           const savePomodoro = async () => {
-            const result = await fetch(`api/user/${user.id}/pomodoros`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                date,
-                duration: pomodoro,
-                taskId: task,
-              }),
-            }).then((res) => res.json());
+            const result = await fetch(
+              `api/user/${user.id}/pomodoros/${date}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  date,
+                  duration: pomodoro,
+                  taskId: task,
+                }),
+              }
+            ).then((res) => res.json());
 
             if (result.error) console.error(result.error);
 
@@ -192,12 +190,19 @@ export const TimerProvider = ({ children }) => {
 
           savePomodoro();
 
-          if (user.streakDate !== date)
+          if (user.streakDate !== date) {
+            const streakNextDay = format(
+              addDays(parseISO(user.streakDate), 1),
+              'yyyy-MM-dd'
+            );
+            const streak = streakNextDay === date ? user.streak + 1 : 1;
+
             userDispatch({
               type: 'SET_STREAK',
-              streak: user.streak + 1,
+              streak,
               streakDate: date,
             });
+          }
         }
 
         dispatch({ type: 'SET_TIME', time: timeNext });
@@ -218,26 +223,27 @@ export const TimerProvider = ({ children }) => {
     }
   }, [
     time,
-    totalTime,
-    count,
     inSession,
     pomodoro,
     breakTime,
     autostart,
     user,
     userDispatch,
+    setPomodoros,
   ]);
 
   useEffect(() => {
     if (change) {
-      const update = async (setting = change) => {
+      const update = async () => {
         const result = await fetch(`api/user/${user.id}/settings`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            [setting]: state[setting],
+            [change]: state[change],
+            ...(change === 'inSession' && { time: state.time }),
+            ...(change === 'count' && { totalTime: state.totalTime }),
           }),
         }).then((res) => res.json());
 
@@ -248,14 +254,10 @@ export const TimerProvider = ({ children }) => {
 
       if (change !== 'time') {
         update();
-
-        if (change === 'inSession') update('time');
       } else {
-        const boundUpdate = update.bind(null, 'time');
+        window.addEventListener('beforeunload', update);
 
-        window.addEventListener('beforeunload', boundUpdate);
-
-        return () => window.removeEventListener('beforeunload', boundUpdate);
+        return () => window.removeEventListener('beforeunload', update);
       }
     }
   }, [state, change, user]);
