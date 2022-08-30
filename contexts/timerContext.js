@@ -6,6 +6,7 @@ import {
   useContext,
 } from 'react';
 import { format } from 'date-fns';
+import { useUser } from './userContext';
 import usePomodoros from '../hooks/usePomodoros';
 
 const timerContext = createContext();
@@ -90,13 +91,17 @@ const timerReducer = (state, action) => {
   }
 };
 
-export const TimerProvider = ({ user, children }) => {
+export const TimerProvider = ({ children }) => {
+  const [user, userDispatch] = useUser();
+
   const { id, userId, ...settings } = user?.settings || {};
-  const { pomodoros, setPomodoros } = usePomodoros(userId, {
-    fallbackData: user?.pomos,
-  });
 
   const [state, dispatch] = useReducer(timerReducer, settings);
+
+  const { pomodoros, setPomodoros } = usePomodoros(userId, {
+    fallbackData: user?.pomos,
+    revalidateOnMount: true,
+  });
 
   const {
     time,
@@ -126,6 +131,7 @@ export const TimerProvider = ({ user, children }) => {
         (sum, curr) => sum + curr.duration,
         0
       );
+
       const count = pomodorosToday.length;
 
       dispatch({ type: 'SET_TOTAL_TIME', totalTime });
@@ -165,13 +171,15 @@ export const TimerProvider = ({ user, children }) => {
 
         const timeNext = shouldSwitch ? breakTime : pomodoro;
 
+        const date = format(new Date() - pomodoro * 1000, 'yyyy-MM-dd');
+
         if (inSession) {
           const savePomodoro = async () => {
             const result = await fetch(`api/user/${user.id}/pomodoros`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                date: format(new Date() - pomodoro * 1000, 'yyyy-MM-dd'),
+                date,
                 duration: pomodoro,
                 taskId: task,
               }),
@@ -179,10 +187,17 @@ export const TimerProvider = ({ user, children }) => {
 
             if (result.error) console.error(result.error);
 
-            if (result.ok) setPomodoros();
+            if (result.success) setPomodoros();
           };
 
           savePomodoro();
+
+          if (user.streakDate !== date)
+            userDispatch({
+              type: 'SET_STREAK',
+              streak: user.streak + 1,
+              streakDate: date,
+            });
         }
 
         dispatch({ type: 'SET_TIME', time: timeNext });
@@ -201,7 +216,17 @@ export const TimerProvider = ({ user, children }) => {
         time: breakTime && !inSession ? breakTime : pomodoro,
       });
     }
-  }, [time, totalTime, count, inSession, pomodoro, breakTime, autostart, user]);
+  }, [
+    time,
+    totalTime,
+    count,
+    inSession,
+    pomodoro,
+    breakTime,
+    autostart,
+    user,
+    userDispatch,
+  ]);
 
   useEffect(() => {
     if (change) {
@@ -218,7 +243,7 @@ export const TimerProvider = ({ user, children }) => {
 
         if (result.error) console.error(result.error);
 
-        if (result.ok) dispatch({ type: 'CLEAR_CHANGE' });
+        if (result.success) dispatch({ type: 'CLEAR_CHANGE' });
       };
 
       if (change !== 'time') {
