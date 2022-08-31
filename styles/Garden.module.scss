@@ -1,0 +1,26 @@
+.garden {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+  width: 90%;
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    h1 {
+      text-align: center;
+    }
+
+    .user {
+      color: var(--color-secondary);
+      font-weight: bold;
+    }
+  }
+
+  .plum {
+    display: flex;
+    flex-direction: column;
+  }
+}
