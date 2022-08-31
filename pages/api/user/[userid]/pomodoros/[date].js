@@ -1,14 +1,15 @@
 import prisma from '../../../../../lib/prisma';
 
 export default async function handler(req, res) {
-  const { userid } = req.query;
+  const { userid, date } = req.query;
 
   if (req.method === 'GET') {
     try {
+      const where = { userId: userid, ...(date !== 'all' && { date }) };
+
       const pomodoros = await prisma.pomo.findMany({
-        where: {
-          userId: userid,
-        },
+        where,
+        orderBy: [{ date: 'desc' }],
       });
 
       return res.status(200).json(pomodoros);
@@ -25,7 +26,7 @@ export default async function handler(req, res) {
         data,
       });
 
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ success: true });
     } catch (err) {
       return res.status(500).json({ error: err.message });
     }
