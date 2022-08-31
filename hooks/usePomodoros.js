@@ -1,8 +1,11 @@
 import useSWR from 'swr';
+import { format } from 'date-fns';
 
-export default function usePomodoros(userId, options) {
+export default function usePomodoros(userId, date, options) {
+  const targetDate = date === 'today' ? format(new Date(), 'yyyy-MM-dd') : date;
+
   const { data, error, mutate } = useSWR(
-    `/api/user/${userId}/pomodoros`,
+    `/api/user/${userId}/pomodoros/${targetDate}`,
     options
   );
 
