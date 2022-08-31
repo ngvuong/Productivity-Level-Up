@@ -98,10 +98,7 @@ export const TimerProvider = ({ children }) => {
 
   const { id, userId, ...settings } = user?.settings || {};
 
-  const [state, dispatch] = useReducer(timerReducer, {
-    ...settings,
-    nonZero: user?.streak,
-  });
+  const [state, dispatch] = useReducer(timerReducer, settings);
 
   const { pomodoros, setPomodoros } = usePomodoros(userId, 'today', {
     revalidateOnMount: true,
