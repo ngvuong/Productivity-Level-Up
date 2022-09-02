@@ -25,7 +25,12 @@ const TaskCard = forwardRef(
     const [projectOptions, setProjectOptions] = useState([]);
     const [tagOptions, setTagOptions] = useState([]);
     const [defaultDetails, setDefaultDetails] = useState(taskDetails);
-    const [errors, setErrors] = useState({ name: '', project: '', tags: '' });
+    const [errors, setErrors] = useState({
+      name: '',
+      project: '',
+      tags: '',
+      date: '',
+    });
 
     const { projects, setProjects } = useProjects(userId, {
       revalidateOnMount: true,
@@ -33,12 +38,18 @@ const TaskCard = forwardRef(
 
     const { tags, setTags } = useTags(userId, { revalidateOnMount: true });
 
+    const today = format(new Date(), 'yyyy-MM-dd');
+
+    const hasErrors = Object.keys(errors).some((key) => errors[key]);
+
     const taskOptions = useRef(
       tasks &&
         [...tasks]
           .sort((a, b) => a.name.localeCompare(b.name))
           .reduce((acc, curr) => {
-            const isUnique = !acc.some((option) => option.label === curr.name);
+            const isUnique =
+              !acc.some((option) => option.label === curr.name) &&
+              !tasks.some((task) => task.date === today);
 
             if (isUnique) acc.push({ label: curr.name, value: curr.id });
 
@@ -51,8 +62,6 @@ const TaskCard = forwardRef(
       { label: 'Medium', value: 'P2' },
       { label: 'High', value: 'P1' },
     ];
-
-    const today = format(new Date(), 'yyyy-MM-dd');
 
     useEffect(() => {
       return () => setTaskDetails(defaultDetails);
@@ -135,14 +144,27 @@ const TaskCard = forwardRef(
     };
 
     const onDetailChange = (target) => {
-      if (target.name === 'name' && target.value.length > 30) {
-        setErrors({ ...errors, name: 'Exceeded 30 characters' });
+      if (target.name === 'name') {
+        setTaskDetails({ ...taskDetails, name: target.value });
+
+        const alreadyExists = tasks.some(
+          (task) => task.name === target.value && task.date === today
+        );
+
+        if (alreadyExists) {
+          setErrors({ ...errors, name: 'Task already exists' });
+        } else if (target.value.length > 30) {
+          setErrors({ ...errors, name: 'Exceeded 30 characters' });
+        }
       } else if (target.name === 'date' && target.value < today) {
-        return;
+        setErrors({ ...errors, date: 'Invalid date' });
+        setTaskDetails({ ...taskDetails, date: target.value });
       } else if (target.name === 'task') {
         const task = tasks.find((task) => task.id === target.value);
 
         if (!task) return setTaskDetails(defaultDetails);
+
+        // if(task.date === today && task.name === ) return setErrors({...errors, })
 
         setTaskDetails({
           ...task,
@@ -152,7 +174,10 @@ const TaskCard = forwardRef(
         });
       } else {
         setTaskDetails({ ...taskDetails, [target.name]: target.value });
-        setErrors({ ...errors, [target.name]: '' });
+        setErrors({
+          ...errors,
+          ...(errors[target.name] && { [target.name]: '' }),
+        });
       }
     };
 
@@ -300,14 +325,17 @@ const TaskCard = forwardRef(
               />
             </label>
             <label>
-              Date{' '}
-              <input
-                type='date'
-                name='date'
-                value={taskDetails.date}
-                onChange={(e) => onDetailChange(e.target)}
-                min={today}
-              />
+              Date
+              <div className={styles.wrapper}>
+                <span className={styles.error}>{errors.date}</span>
+                <input
+                  type='date'
+                  name='date'
+                  value={taskDetails.date}
+                  onChange={(e) => onDetailChange(e.target)}
+                  min={today}
+                />
+              </div>
             </label>
             <label>
               Notes{' '}
@@ -322,11 +350,13 @@ const TaskCard = forwardRef(
             <button
               className={styles.btnSave}
               onClick={async () => {
-                await onSave();
-                setDefaultDetails(taskDetails);
-                task ? setEdit(false) : setShowCard(false);
+                if (valid && !hasErrors) {
+                  await onSave();
+                  setDefaultDetails(taskDetails);
+                  task ? setEdit(false) : setShowCard(false);
+                }
               }}
-              disabled={!valid}
+              disabled={!valid || hasErrors}
             >
               Save
             </button>
