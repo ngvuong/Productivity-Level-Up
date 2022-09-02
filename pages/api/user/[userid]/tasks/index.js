@@ -19,6 +19,7 @@ export default async function handler(req, res) {
         {
           priority: 'asc',
         },
+        { date: 'desc' },
       ],
     });
 
@@ -26,6 +27,18 @@ export default async function handler(req, res) {
   } else if (req.method === 'POST') {
     try {
       const { data } = req.body;
+
+      const existingTasks = await prisma.task.findMany({
+        where: {
+          name: data.name,
+          date: data.date,
+        },
+      });
+
+      if (existingTasks.length) {
+        return res.status(409).json({ error: 'Task already exists' });
+      }
+
       const newData = data.tags
         ? { ...data, tags: { connect: data.tags.map((tag) => ({ id: tag })) } }
         : data;
