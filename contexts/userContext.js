@@ -17,18 +17,27 @@ const userReducer = (state, action) => {
       return {
         ...state,
         exp: action.exp,
+        ...(action.exp >= state.expMin + state.expReq && {
+          level: state.level + 1,
+          expMin: state.expMin + state.expReq,
+          expReq: Math.round(state.expReq * 1.1),
+        }),
         change: 'exp',
       };
     case 'SET_STREAK':
       return {
         ...state,
-        streak: action.streak,
+        streak: action.streak || 0,
+        streakDate: action.streakDate || null,
         change: 'streak',
       };
     case 'SET_USER':
-      return {
-        ...action.user,
-      };
+      return action.user
+        ? {
+            ...action.user,
+            loading: false,
+          }
+        : undefined;
     case 'CLEAR_CHANGE':
       return {
         ...state,
@@ -42,18 +51,19 @@ const userReducer = (state, action) => {
 export function UserProvider({ children }) {
   const { data: session, status } = useSession();
 
-  const [state, dispatch] = useReducer(userReducer, {});
+  const [state, dispatch] = useReducer(userReducer, { loading: true });
 
   useEffect(() => {
-    if (session) {
-      dispatch({ type: 'SET_USER', user: session.user });
+    if (status !== 'loading') {
+      if (session) {
+        dispatch({ type: 'SET_USER', user: session.user });
+      } else dispatch({ type: 'SET_USER' });
     }
-  }, [session]);
+  }, [session, status]);
 
   useEffect(() => {
-    if (state.change && state.id) {
+    if (state && state.change) {
       const update = async () => {
-        console.log(state.change, state[state.change]);
         const result = await fetch(`api/user/${state.id}`, {
           method: 'PUT',
           headers: {
@@ -61,6 +71,15 @@ export function UserProvider({ children }) {
           },
           body: JSON.stringify({
             [state.change]: state[state.change],
+            ...(state.change === 'streak' && {
+              streakDate: state.streakDate,
+            }),
+            ...(state.change === 'exp' &&
+              state.exp >= state.expMin && {
+                level: state.level,
+                expMin: state.expMin,
+                expReq: state.expReq,
+              }),
           }),
         }).then((res) => res.json());
 
@@ -73,7 +92,7 @@ export function UserProvider({ children }) {
     }
   }, [state]);
 
-  if (status === 'loading') {
+  if (state && state.loading) {
     return (
       <Overlay>
         <Spinner />
@@ -81,18 +100,17 @@ export function UserProvider({ children }) {
     );
   }
 
-  const value = [
-    status === 'authenticated' ? session.user : undefined,
-    dispatch,
-  ];
+  const value = [state, dispatch];
 
   return <userContext.Provider value={value}>{children}</userContext.Provider>;
 }
 
 export function useUser() {
   const context = useContext(userContext);
+
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider');
   }
+
   return context;
 }
