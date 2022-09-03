@@ -47,9 +47,7 @@ const TaskCard = forwardRef(
         [...tasks]
           .sort((a, b) => a.name.localeCompare(b.name))
           .reduce((acc, curr) => {
-            const isUnique =
-              !acc.some((option) => option.label === curr.name) &&
-              !tasks.some((task) => task.date === today);
+            const isUnique = !acc.some((option) => option.label === curr.name);
 
             if (isUnique) acc.push({ label: curr.name, value: curr.id });
 
@@ -86,6 +84,27 @@ const TaskCard = forwardRef(
         setTagOptions(options);
       }
     }, [projects, projectOptions, tags, tagOptions]);
+
+    useEffect(() => {
+      const isUnique = !tasks.some(
+        (task) =>
+          task.name === taskDetails.name && task.date === taskDetails.date
+      );
+
+      if (isUnique && errors.name) {
+        setErrors({ ...errors, name: '' });
+      } else if (!isUnique && !errors.name)
+        setErrors({ ...errors, name: 'Task already exists' });
+
+      if (errors.project || errors.tags) {
+        const timeout = setTimeout(
+          () => setErrors({ ...errors, project: '', tags: '' }),
+          3000
+        );
+
+        return () => clearTimeout(timeout);
+      }
+    }, [tasks, taskDetails, errors]);
 
     const onNewProject = async (project) => {
       const name = project
@@ -144,27 +163,21 @@ const TaskCard = forwardRef(
     };
 
     const onDetailChange = (target) => {
-      if (target.name === 'name') {
+      if (target.name === 'name' && target.value.length > 30) {
         setTaskDetails({ ...taskDetails, name: target.value });
 
-        const alreadyExists = tasks.some(
-          (task) => task.name === target.value && task.date === today
-        );
-
-        if (alreadyExists) {
-          setErrors({ ...errors, name: 'Task already exists' });
-        } else if (target.value.length > 30) {
-          setErrors({ ...errors, name: 'Exceeded 30 characters' });
-        }
+        setErrors({ ...errors, name: 'Exceeded 30 characters' });
       } else if (target.name === 'date' && target.value < today) {
-        setErrors({ ...errors, date: 'Invalid date' });
         setTaskDetails({ ...taskDetails, date: target.value });
+
+        setErrors({ ...errors, date: 'Invalid date' });
       } else if (target.name === 'task') {
         const task = tasks.find((task) => task.id === target.value);
 
-        if (!task) return setTaskDetails(defaultDetails);
-
-        // if(task.date === today && task.name === ) return setErrors({...errors, })
+        if (!task) {
+          setErrors({ name: '', project: '', tags: '', date: '' });
+          return setTaskDetails(defaultDetails);
+        }
 
         setTaskDetails({
           ...task,
