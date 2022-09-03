@@ -10,7 +10,6 @@ import styles from '../styles/Garden.module.scss';
 
 export default function Garden({ user }) {
   const [selected, setSelected] = useState();
-  const [targetPomodoros, setTargetPomodoros] = useState({});
   const [options, setOptions] = useState([]);
 
   const { pomodoros } = usePomodoros(user.id, 'all', {
@@ -30,8 +29,6 @@ export default function Garden({ user }) {
         }
       }, {});
 
-      setTargetPomodoros(reducedPomodoros);
-
       const today = format(new Date(), 'yyyy-MM-dd');
 
       setOptions(
@@ -43,19 +40,6 @@ export default function Garden({ user }) {
     }
   }, [pomodoros]);
 
-  useEffect(() => {
-    if (targetPomodoros) {
-      const today = format(new Date(), 'yyyy-MM-dd');
-
-      setOptions(
-        Object.keys(targetPomodoros).map((key) => ({
-          label: key === today ? 'Today' : format(parseISO(key), 'MMM d, yyyy'),
-          value: key,
-        }))
-      );
-    }
-  }, [targetPomodoros]);
-
   return (
     <main className={styles.garden}>
       <header className={styles.header}>
@@ -64,17 +48,17 @@ export default function Garden({ user }) {
         <Level />
       </header>
 
-      <section className={styles.plum}>
+      <section className={styles.yard}>
         <Select
           value={selected}
           onChange={setSelected}
           options={options}
           isOptionDisabled={(option) => option.value === selected?.value}
           isSearchable={false}
-          placeholder='Available Time'
+          placeholder='Select Date'
           styles={plumSelectStyles}
         />
-        <Plum pomodoros={targetPomodoros[selected?.value]} />
+        {selected && <Plum userId={user.id} date={selected.value} />}
       </section>
     </main>
   );
