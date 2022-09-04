@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import Timer from '../components/ui/Timer';
 import Stat from '../components/ui/Stat';
 import { useTimer } from '../contexts/timerContext';
@@ -10,16 +9,13 @@ export default function Pomodoro({ user }) {
 
   return (
     <main className={styles.pomodoro}>
-      <section className={styles.timer}>
-        <Timer
-          defaultTime={user.settings.pomodoro}
-          defaultBreak={user.settings.breakTime}
-        />
-      </section>
-
       <section className={styles.stats}>
         <Stat stat={count} label='session' />
         <Stat stat={Math.floor(totalTime / 60)} label='minute' />
+      </section>
+
+      <section className={styles.timer}>
+        <Timer userId={user.id} />
       </section>
     </main>
   );
