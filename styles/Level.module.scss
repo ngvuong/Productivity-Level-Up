@@ -3,6 +3,9 @@
   flex-direction: column;
   gap: 1rem;
   font-style: italic;
+  font-weight: bold;
+  cursor: default;
+  user-select: none;
 
   .wrapper {
     display: flex;
@@ -41,7 +44,6 @@
         height: 100%;
         max-width: 100%;
         background-color: var(--color-secondary);
-        transition: all 1s cubic-bezier(0, 0.5, 0, 1);
       }
 
       span {
