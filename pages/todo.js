@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import Select from 'react-select';
-import Spinner from '../components/layout/Spinner';
 import Overlay from '../components/layout/Overlay';
+import Spinner from '../components/layout/Spinner';
 import Task from '../components/main/Task';
 import TaskCard from '../components/ui/TaskCard';
 import useTasks from '../hooks/useTasks';
@@ -14,6 +14,7 @@ import styles from '../styles/Todo.module.scss';
 
 export default function Todo({ user }) {
   const today = format(new Date(), 'yyyy-MM-dd');
+
   const [selected, setSelected] = useState({ label: 'Today', value: today });
   const [legacySelected, setLegacySelected] = useState();
   const [showLegacy, setShowLegacy] = useState(false);
@@ -77,11 +78,16 @@ export default function Todo({ user }) {
   }, [tasksByDate, today]);
 
   if (isLoading) {
-    return <Spinner />;
+    return (
+      <Overlay>
+        <Spinner />
+      </Overlay>
+    );
   }
 
   const getData = () => {
     const { name, project, tags, priority, date, notes } = taskDetails;
+
     const taskName = name
       .trim()
       .split(' ')
@@ -153,7 +159,13 @@ export default function Todo({ user }) {
           <h3>{selected.label}</h3>
           {tasksByDate &&
             tasksByDate[selected.value]?.map((task) => (
-              <Task key={task.id} task={task} userId={user.id} />
+              <Task
+                key={task.id}
+                task={task}
+                tasks={tasks}
+                setTasks={setTasks}
+                userId={user.id}
+              />
             ))}
         </div>
       </section>
@@ -161,7 +173,11 @@ export default function Todo({ user }) {
         className={styles.btnLegacy}
         onClick={() => {
           setShowLegacy(!showLegacy);
-          setLegacySelected(legacySelected ? legacySelected : legacyOptions[0]);
+          setLegacySelected(
+            legacySelected
+              ? legacySelected
+              : legacyOptions[legacyOptions.length - 1]
+          );
         }}
       >
         View History
@@ -183,7 +199,13 @@ export default function Todo({ user }) {
           <div className={styles.tasks}>
             <h3>{legacySelected?.label}</h3>
             {tasksByDate[legacySelected?.value]?.map((task) => (
-              <Task key={task.id} task={task} userId={user.id} />
+              <Task
+                key={task.id}
+                task={task}
+                tasks={tasks}
+                setTasks={setTasks}
+                userId={user.id}
+              />
             ))}
           </div>
         </section>
