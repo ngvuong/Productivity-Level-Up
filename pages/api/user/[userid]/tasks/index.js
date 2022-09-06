@@ -4,26 +4,28 @@ export default async function handler(req, res) {
   const { userid } = req.query;
 
   if (req.method === 'GET') {
-    const tasks = await prisma.task.findMany({
-      where: {
-        userId: userid,
-      },
-      include: {
-        project: true,
-        tags: true,
-      },
-      orderBy: [
-        {
-          completed: 'asc',
+    try {
+      const tasks = await prisma.task.findMany({
+        where: { userId: userid },
+        include: {
+          project: true,
+          tags: true,
         },
-        {
-          priority: 'asc',
-        },
-        { date: 'desc' },
-      ],
-    });
+        orderBy: [
+          {
+            completed: 'asc',
+          },
+          {
+            priority: 'asc',
+          },
+          { date: 'desc' },
+        ],
+      });
 
-    return res.status(200).json(tasks);
+      return res.status(200).json(tasks);
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   } else if (req.method === 'POST') {
     try {
       const { data } = req.body;
