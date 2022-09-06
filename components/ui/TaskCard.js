@@ -43,7 +43,7 @@ const TaskCard = forwardRef(
     const hasErrors = Object.keys(errors).some((key) => errors[key]);
 
     const taskOptions = useRef(
-      tasks &&
+      !task &&
         [...tasks]
           .sort((a, b) => a.name.localeCompare(b.name))
           .reduce((acc, curr) => {
@@ -86,10 +86,16 @@ const TaskCard = forwardRef(
     }, [projects, projectOptions, tags, tagOptions]);
 
     useEffect(() => {
-      const isUnique = !tasks.some(
-        (task) =>
-          task.name === taskDetails.name && task.date === taskDetails.date
-      );
+      const isUnique = task
+        ? !tasks.some(
+            (t) =>
+              t.name === taskDetails.name &&
+              t.date === taskDetails.date &&
+              t.id !== task.id
+          )
+        : !tasks.some(
+            (t) => t.name === taskDetails.name && t.date === taskDetails.date
+          );
 
       if (isUnique && errors.name) {
         setErrors({ ...errors, name: '' });
