@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import { useDebouncedCallback } from 'use-debounce';
 
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
@@ -11,26 +12,32 @@ export default function Taskbar({ task, toggleDone }) {
     setDone(task.completed);
   }, [task.completed]);
 
+  const today = format(new Date(), 'yyyy-MM-dd');
+
   const debounced = useDebouncedCallback(() => {
-    if (done !== task.completed) {
+    if (done !== task.completed && task.date <= today) {
       toggleDone(task.id, done);
     }
   }, 500);
 
   return (
     <div className={styles.container}>
-      <input
-        type='checkbox'
-        id={task.id}
-        checked={done}
-        onChange={(e) => {
-          setDone(e.target.checked);
-          debounced();
-        }}
-      />
-      <label htmlFor={task.id}>
-        {done ? <FaRegCheckSquare /> : <FaRegSquare />}
-      </label>
+      {task.date <= today && (
+        <>
+          <input
+            type='checkbox'
+            id={task.id}
+            checked={done}
+            onChange={(e) => {
+              setDone(e.target.checked);
+              debounced();
+            }}
+          />
+          <label htmlFor={task.id}>
+            {done ? <FaRegCheckSquare /> : <FaRegSquare />}
+          </label>
+        </>
+      )}
       <div
         className={styles.taskBar}
         style={{
