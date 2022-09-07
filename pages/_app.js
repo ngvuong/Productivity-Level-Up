@@ -9,21 +9,21 @@ import '../styles/globals.scss';
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   return (
     <SessionProvider session={session}>
-      <UserProvider>
-        <SWRConfig
-          value={{
-            fetcher: (...args) => fetch(...args).then((res) => res.json()),
-            errorRetryCount: 3,
-            revalidateOnMount: false,
-          }}
-        >
-          <Layout>
-            <TimerProvider>
+      <SWRConfig
+        value={{
+          fetcher: (...args) => fetch(...args).then((res) => res.json()),
+          errorRetryCount: 3,
+          revalidateOnMount: false,
+        }}
+      >
+        <UserProvider>
+          <TimerProvider>
+            <Layout>
               <Component {...pageProps} />
-            </TimerProvider>
-          </Layout>
-        </SWRConfig>
-      </UserProvider>
+            </Layout>
+          </TimerProvider>
+        </UserProvider>
+      </SWRConfig>
     </SessionProvider>
   );
 }
