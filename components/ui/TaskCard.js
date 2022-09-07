@@ -3,34 +3,27 @@ import { format, parseISO } from 'date-fns';
 import CustomSelect from '../ui/CustomSelect';
 import useProjects from '../../hooks/useProjects';
 import useTags from '../../hooks/useTags';
+import { useUser } from '../../contexts/userContext';
 
 import { FaEdit } from 'react-icons/fa';
 import styles from '../../styles/TaskCard.module.scss';
 
 const TaskCard = forwardRef(
   (
-    {
-      task,
-      tasks,
-      userId,
-      setShowCard,
-      taskDetails,
-      setTaskDetails,
-      onSave,
-      valid,
-    },
+    { task, tasks, setShowCard, taskDetails, setTaskDetails, onSave, valid },
     ref
   ) => {
     const [edit, setEdit] = useState(task ? false : true);
     const [projectOptions, setProjectOptions] = useState([]);
     const [tagOptions, setTagOptions] = useState([]);
-    const [defaultDetails, setDefaultDetails] = useState(taskDetails);
     const [errors, setErrors] = useState({
       name: '',
       project: '',
       tags: '',
       date: '',
     });
+
+    const [{ id: userId }] = useUser();
 
     const { projects, setProjects } = useProjects(userId, {
       revalidateOnMount: true,
@@ -41,6 +34,8 @@ const TaskCard = forwardRef(
     const today = format(new Date(), 'yyyy-MM-dd');
 
     const hasErrors = Object.keys(errors).some((key) => errors[key]);
+
+    const defaultDetails = useRef(taskDetails);
 
     const taskOptions = useRef(
       !task &&
@@ -62,8 +57,8 @@ const TaskCard = forwardRef(
     ];
 
     useEffect(() => {
-      return () => setTaskDetails(defaultDetails);
-    }, [setTaskDetails, defaultDetails]);
+      return () => setTaskDetails(defaultDetails.current);
+    }, [setTaskDetails]);
 
     useEffect(() => {
       if (projects?.length && !projectOptions.length) {
@@ -110,7 +105,7 @@ const TaskCard = forwardRef(
 
         return () => clearTimeout(timeout);
       }
-    }, [tasks, taskDetails, errors]);
+    }, [task, tasks, taskDetails, errors]);
 
     const onNewProject = async (project) => {
       const name = project
@@ -133,6 +128,7 @@ const TaskCard = forwardRef(
       if (data.error) return alert(data.error);
 
       const newOption = { label: name, value: data.id };
+
       setProjectOptions([...projectOptions, newOption]);
 
       setProjects();
@@ -161,6 +157,7 @@ const TaskCard = forwardRef(
       if (data.error) return alert(data.error);
 
       const newOption = { label: name, value: data.id };
+
       setTagOptions([...tagOptions, newOption]);
 
       setTags();
@@ -173,16 +170,22 @@ const TaskCard = forwardRef(
         setTaskDetails({ ...taskDetails, name: target.value });
 
         setErrors({ ...errors, name: 'Exceeded 30 characters' });
-      } else if (target.name === 'date' && target.value < today) {
-        setTaskDetails({ ...taskDetails, date: target.value });
+      } else if (
+        target.name === 'date' &&
+        (target.value < today || task?.date < today)
+      ) {
+        if (target.value < today) {
+          setTaskDetails({ ...taskDetails, date: target.value });
 
-        setErrors({ ...errors, date: 'Invalid date' });
+          setErrors({ ...errors, date: 'Invalid date' });
+        } else setErrors({ ...errors, date: 'Cannot modify date' });
       } else if (target.name === 'task') {
         const task = tasks.find((task) => task.id === target.value);
 
         if (!task) {
           setErrors({ name: '', project: '', tags: '', date: '' });
-          return setTaskDetails(defaultDetails);
+
+          return setTaskDetails(defaultDetails.current);
         }
 
         setTaskDetails({
@@ -193,6 +196,7 @@ const TaskCard = forwardRef(
         });
       } else {
         setTaskDetails({ ...taskDetails, [target.name]: target.value });
+
         setErrors({
           ...errors,
           ...(errors[target.name] && { [target.name]: '' }),
@@ -353,6 +357,7 @@ const TaskCard = forwardRef(
                   value={taskDetails.date}
                   onChange={(e) => onDetailChange(e.target)}
                   min={today}
+                  disabled={task?.date < today}
                 />
               </div>
             </label>
@@ -371,7 +376,7 @@ const TaskCard = forwardRef(
               onClick={async () => {
                 if (valid && !hasErrors) {
                   await onSave();
-                  setDefaultDetails(taskDetails);
+                  defaultDetails.current = taskDetails;
                   task ? setEdit(false) : setShowCard(false);
                 }
               }}
@@ -384,18 +389,16 @@ const TaskCard = forwardRef(
                 className={styles.btnEdit}
                 onClick={() => {
                   setEdit(!edit);
-                  setTaskDetails(defaultDetails);
+                  setTaskDetails(defaultDetails.current);
                 }}
               >
                 <FaEdit />
               </button>
             )}
-            {(edit || !task) && (
+            {edit && (
               <button
                 className={styles.btnClose}
-                onClick={() => {
-                  setShowCard(false);
-                }}
+                onClick={() => setShowCard(false)}
               >
                 ✕
               </button>
