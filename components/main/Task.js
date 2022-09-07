@@ -1,17 +1,15 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
 import Taskbar from '../ui/Taskbar';
 import Overlay from '../layout/Overlay';
 import TaskCard from '../ui/TaskCard';
 import useModal from '../../hooks/useModal';
-import useTasksByDate from '../../hooks/useTasksByDate';
-import useTasks from '../../hooks/useTasks';
 
 import { FaInfoCircle, FaWindowClose } from 'react-icons/fa';
 import styles from '../../styles/Task.module.scss';
 
-export default function Task({ task, userId }) {
+export default function Task({ task, tasks, setTasks }) {
   const tagIds = task.tags.map((tag) => tag.id);
+
   const [taskDetails, setTaskDetails] = useState({
     name: task.name,
     project: task?.project?.id || null,
@@ -20,32 +18,12 @@ export default function Task({ task, userId }) {
     date: task.date,
     notes: task.notes || '',
   });
+
   const { triggerRef, nodeRef, show, setShow } = useModal(false);
-  const { setTasks: setTodayTasks } = useTasksByDate(
-    userId,
-    format(new Date(), 'yyyy-MM-dd')
-  );
-  const { setTasks } = useTasks(userId);
-
-  const toggleDone = async (id, done) => {
-    const data = { completed: done };
-
-    const result = await fetch(`/api/tasks/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ data }),
-    }).then((res) => res.json());
-
-    if (result.error) console.error(result.error);
-
-    setTodayTasks();
-    setTasks();
-  };
 
   const getChangedData = () => {
     const { name, project, tags, priority, date, notes } = taskDetails;
+
     const taskName = name
       .trim()
       .split(' ')
@@ -57,8 +35,8 @@ export default function Task({ task, userId }) {
       ? project !== task.project.id
       : project !== null;
     const tagsChanged =
-      !tags.every((tag) => tagIds.includes(tag)) ||
-      !tagIds.every((id) => tags.includes(id));
+      tags.length !== tagIds.length ||
+      [...new Set([...tags, ...tagIds])].length !== tags.length;
     const priorityChanged = priority !== task.priority;
     const dateChanged = date !== task.date;
     const notesChanged = notes !== task.notes;
@@ -75,8 +53,8 @@ export default function Task({ task, userId }) {
     return data;
   };
 
-  const onSave = async () => {
-    const data = getChangedData();
+  const onSave = async (update) => {
+    const data = update ? update : getChangedData();
 
     if (!Object.keys(data).length) return;
 
@@ -85,12 +63,14 @@ export default function Task({ task, userId }) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ data }),
+      body: JSON.stringify({
+        ...data,
+        ...(data.date && !data.name && { name: task.name }),
+      }),
     }).then((res) => res.json());
 
     if (result.error) return alert(result.error);
 
-    setTodayTasks();
     setTasks();
   };
 
@@ -101,7 +81,6 @@ export default function Task({ task, userId }) {
 
     if (result.error) return alert(result.error);
 
-    setTodayTasks();
     setTasks();
   };
 
@@ -110,12 +89,14 @@ export default function Task({ task, userId }) {
       <button className={styles.btnInfo} ref={triggerRef}>
         <FaInfoCircle />
       </button>
-      <Taskbar task={task} toggleDone={toggleDone} />
+
+      <Taskbar task={task} onSave={onSave} />
+
       {show && (
         <Overlay>
           <TaskCard
             task={task}
-            userId={userId}
+            tasks={tasks}
             setShowCard={setShow}
             taskDetails={taskDetails}
             setTaskDetails={setTaskDetails}
@@ -125,6 +106,7 @@ export default function Task({ task, userId }) {
           />
         </Overlay>
       )}
+
       <button className={styles.btnDelete} onClick={onDelete}>
         <FaWindowClose />
       </button>
