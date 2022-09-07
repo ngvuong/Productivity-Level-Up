@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useDebouncedCallback } from 'use-debounce';
 
 import { FaRegSquare, FaRegCheckSquare, FaCheckDouble } from 'react-icons/fa';
 import styles from '../../styles/Taskbar.module.scss';
 
-export default function Taskbar({ task, toggleDone }) {
+export default function Taskbar({ task, onSave }) {
   const [done, setDone] = useState(task.completed);
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function Taskbar({ task, toggleDone }) {
 
   const debounced = useDebouncedCallback(() => {
     if (done !== task.completed && task.date <= today) {
-      toggleDone(task.id, done);
+      onSave({ completed: done });
     }
   }, 500);
 
@@ -38,6 +38,7 @@ export default function Taskbar({ task, toggleDone }) {
           </label>
         </>
       )}
+
       <div
         className={styles.taskBar}
         style={{
