@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+import { format } from 'date-fns';
 import Select from 'react-select';
 import Clock from './Clock';
+import useTasks from '../../hooks/useTasks';
+import { useSettings } from '../../contexts/settingsContext';
 import { useTimer } from '../../contexts/timerContext';
-import useTasksByDate from '../../hooks/useTasksByDate';
 
 import {
   MdPlayArrow,
@@ -20,20 +22,11 @@ import styles from '../../styles/Timer.module.scss';
 
 export default function Timer({ userId }) {
   const [
-    {
-      time,
-      run,
-      inSession,
-      count,
-      task,
-      pomodoro,
-      breakTime,
-      autostart,
-      alarm,
-      ticking,
-    },
+    { inSession, count, task, pomodoro, breakTime, autostart, alarm, ticking },
     dispatch,
-  ] = useTimer();
+  ] = useSettings();
+
+  const [{ time, run }, timerDispatch] = useTimer();
 
   const [taskSelected, setTaskSelected] = useState();
   const [timeSelected, setTimeSelected] = useState({
@@ -47,10 +40,13 @@ export default function Timer({ userId }) {
     value: breakTime,
   });
   const [taskOptions, setTaskOptions] = useState([]);
+  const [skip, setSkip] = useState(false);
 
-  const { tasks } = useTasksByDate(userId, 'today', {
+  const { tasks } = useTasks(userId, {
     revalidateOnMount: true,
   });
+
+  const runningRef = useRef(run);
 
   const timeOptionsRef = useRef(
     [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map((m) => ({
@@ -68,33 +64,46 @@ export default function Timer({ userId }) {
 
   useEffect(() => {
     if (tasks) {
+      const today = format(new Date(), 'yyyy-MM-dd');
+
+      const tasksToday = tasks.filter((task) => task.date === today);
+
       setTaskOptions(
-        tasks.map((task) => ({
+        tasksToday.map((task) => ({
           label: task.name,
           value: task.id,
         }))
       );
 
       if (task) {
-        const targetTask = tasks.find((t) => t.id === task);
+        const targetTask = tasksToday.find((t) => t.id === task);
 
         if (targetTask)
-          setTaskSelected({ label: targetTask.name, value: targetTask.id });
+          setTaskSelected({ label: targetTask.name, value: task });
       }
     }
-  }, [tasks]);
+  }, [tasks, task]);
 
-  const onSkip = () => {
-    const shouldSwitch = breakTime && inSession;
+  useEffect(() => {
+    if (skip) {
+      timerDispatch({ type: 'STOP_TIMER' });
 
-    const timeNext = shouldSwitch ? breakTime : pomodoro;
+      const shouldSwitch = breakTime && inSession;
 
-    dispatch({ type: 'SET_TIME', time: timeNext });
+      const timeNext = shouldSwitch ? breakTime : pomodoro;
 
-    if (shouldSwitch || !inSession) dispatch({ type: 'SET_IN_SESSION' });
+      const timeout = setTimeout(() => {
+        timerDispatch({ type: 'SET_TIME', time: timeNext });
 
-    if (!autostart) dispatch({ type: 'STOP_TIMER' });
-  };
+        if (runningRef.current) timerDispatch({ type: 'START_TIMER' });
+
+        if (shouldSwitch || !inSession) dispatch({ type: 'SET_IN_SESSION' });
+        setSkip(false);
+      }, 100);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [skip, inSession, breakTime, pomodoro, timerDispatch, dispatch]);
 
   return (
     <div className={styles.timer}>
@@ -105,15 +114,19 @@ export default function Timer({ userId }) {
       <div className={styles.controlBtns}>
         <button
           className={styles.btnStart}
-          onClick={() =>
-            run
-              ? dispatch({ type: 'STOP_TIMER' })
-              : dispatch({ type: 'START_TIMER' })
-          }
+          onClick={() => {
+            if (run) {
+              timerDispatch({ type: 'STOP_TIMER' });
+              runningRef.current = false;
+            } else {
+              timerDispatch({ type: 'START_TIMER' });
+              runningRef.current = true;
+            }
+          }}
         >
           {run ? <MdPause /> : <MdPlayArrow />}
         </button>
-        <button className={styles.btnSkip} onClick={onSkip}>
+        <button className={styles.btnSkip} onClick={() => setSkip(true)}>
           <MdSkipNext />
         </button>
       </div>
@@ -128,9 +141,7 @@ export default function Timer({ userId }) {
                 dispatch({ type: 'SET_TASK', task: option?.value || '' });
               }}
               options={taskOptions}
-              isOptionDisabled={(option) =>
-                taskSelected?.value === option.value
-              }
+              isOptionDisabled={({ value }) => taskSelected?.value === value}
               menuPlacement='top'
               isClearable
               placeholder='Select task'
@@ -152,7 +163,7 @@ export default function Timer({ userId }) {
               options={timeOptionsRef.current}
               isSearchable={false}
               isDisabled={inSession}
-              isOptionDisabled={(option) => timeSelected.value === option.value}
+              isOptionDisabled={({ value }) => timeSelected.value === value}
               menuPlacement='top'
               styles={timeSelectStyles}
             />
@@ -173,9 +184,7 @@ export default function Timer({ userId }) {
               options={breakOptionsRef.current}
               isSearchable={false}
               isDisabled={!inSession}
-              isOptionDisabled={(option) =>
-                breakSelected.value === option.value
-              }
+              isOptionDisabled={({ value }) => breakSelected.value === value}
               menuPlacement='top'
               styles={timeSelectStyles}
             />
@@ -190,8 +199,8 @@ export default function Timer({ userId }) {
               type='checkbox'
               id='autostart'
               checked={autostart}
-              onChange={(e) =>
-                dispatch({ type: 'SET_AUTOSTART', autostart: e.target.checked })
+              onChange={({ target }) =>
+                dispatch({ type: 'SET_AUTOSTART', autostart: target.checked })
               }
             />
             <label htmlFor='autostart' />
@@ -204,8 +213,8 @@ export default function Timer({ userId }) {
               type='checkbox'
               id='alarmSound'
               checked={alarm}
-              onChange={(e) =>
-                dispatch({ type: 'SET_ALARM', alarm: e.target.checked })
+              onChange={({ target }) =>
+                dispatch({ type: 'SET_ALARM', alarm: target.checked })
               }
             />
             <label htmlFor='alarmSound' />
@@ -218,8 +227,8 @@ export default function Timer({ userId }) {
               type='checkbox'
               id='tickingSound'
               checked={ticking}
-              onChange={(e) =>
-                dispatch({ type: 'SET_TICKING', ticking: e.target.checked })
+              onChange={({ target }) =>
+                dispatch({ type: 'SET_TICKING', ticking: target.checked })
               }
             />
             <label htmlFor='tickingSound' />
