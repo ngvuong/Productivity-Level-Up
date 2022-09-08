@@ -15,31 +15,39 @@ export default function Clock({ time, totalTime }) {
   const minutesNext = Math.floor(time / 60).toLocaleString('en-US', options);
 
   useEffect(() => {
-    const isStart = time === currentTime;
+    if (time === totalTime) {
+      setSecondsTick({ ones: true, tens: true });
+      setMinutesTick({ ones: true, tens: true });
 
-    if (!isStart && time !== totalTime)
-      setSecondsTick((prev) => ({ ...prev, ones: true }));
+      const timeout = setTimeout(() => {
+        setSecondsTick({ ones: false, tens: false });
+        setMinutesTick({ ones: false, tens: false });
+      }, 200);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [time, totalTime]);
+
+  useEffect(() => {
+    setSecondsTick((prev) => ({ ...prev, ones: true }));
 
     const timeout = setTimeout(() => {
       setSecondsTick((prev) => ({ ...prev, ones: false }));
       setCurrentTime(time);
-    }, 210);
+    }, 200);
 
-    if (time % 10 === 9 && !isStart)
-      setSecondsTick((prev) => ({ ...prev, tens: true }));
+    if (time % 10 === 9) setSecondsTick((prev) => ({ ...prev, tens: true }));
 
-    if (time % 60 === 59 && !isStart)
-      setMinutesTick((prev) => ({ ...prev, ones: true }));
+    if (time % 60 === 59) setMinutesTick((prev) => ({ ...prev, ones: true }));
 
-    if (time % 600 === 599 && !isStart)
-      setMinutesTick((prev) => ({ ...prev, tens: true }));
+    if (time % 600 === 599) setMinutesTick((prev) => ({ ...prev, tens: true }));
 
     return () => {
       setSecondsTick((prev) => ({ ...prev, tens: false }));
       setMinutesTick({ ones: false, tens: false });
       clearTimeout(timeout);
     };
-  }, [time, currentTime, totalTime]);
+  }, [time]);
 
   return (
     <div className={styles.clock}>
