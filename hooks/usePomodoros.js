@@ -2,6 +2,8 @@ import useSWR from 'swr';
 import { format } from 'date-fns';
 
 export default function usePomodoros(userId, date, options) {
+  if (!userId || !date) return { pomodoros: undefined };
+
   const targetDate = date === 'today' ? format(new Date(), 'yyyy-MM-dd') : date;
 
   const { data, error, mutate } = useSWR(
