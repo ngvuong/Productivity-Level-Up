@@ -6,13 +6,19 @@ import {
   useContext,
 } from 'react';
 import { format, parseISO, addDays } from 'date-fns';
-import { useUser } from './userContext';
 import usePomodoros from '../hooks/usePomodoros';
+import { useUser } from './userContext';
+import { useSettings } from './settingsContext';
 
 const timerContext = createContext();
 
 const timerReducer = (state, action) => {
   switch (action.type) {
+    case 'SET_TIME':
+      return {
+        ...state,
+        time: action.time,
+      };
     case 'START_TIMER':
       return {
         ...state,
@@ -23,71 +29,6 @@ const timerReducer = (state, action) => {
         ...state,
         run: false,
       };
-    case 'SET_TIME':
-      return {
-        ...state,
-        time: action.time,
-        change: 'time',
-      };
-    case 'SET_TOTAL_TIME':
-      return {
-        ...state,
-        totalTime: action.totalTime,
-        change: 'totalTime',
-      };
-    case 'SET_COUNT':
-      return {
-        ...state,
-        count: action.count,
-        change: 'count',
-      };
-    case 'SET_IN_SESSION':
-      return {
-        ...state,
-        inSession: state.breakTime ? !state.inSession : true,
-        change: 'inSession',
-      };
-    case 'SET_TASK':
-      return {
-        ...state,
-        task: action.task,
-        change: 'task',
-      };
-    case 'SET_POMODORO':
-      return {
-        ...state,
-        pomodoro: action.pomodoro,
-        change: 'pomodoro',
-      };
-    case 'SET_BREAKTIME':
-      return {
-        ...state,
-        breakTime: action.breakTime,
-        change: 'breakTime',
-      };
-    case 'SET_AUTOSTART':
-      return {
-        ...state,
-        autostart: action.autostart,
-        change: 'autostart',
-      };
-    case 'SET_ALARM':
-      return {
-        ...state,
-        alarm: action.alarm,
-        change: 'alarm',
-      };
-    case 'SET_TICKING':
-      return {
-        ...state,
-        ticking: action.ticking,
-        change: 'ticking',
-      };
-    case 'CLEAR_CHANGE':
-      return {
-        ...state,
-        change: '',
-      };
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
   }
@@ -96,17 +37,10 @@ const timerReducer = (state, action) => {
 export const TimerProvider = ({ children }) => {
   const [user, userDispatch] = useUser();
 
-  const { id, userId, ...settings } = user?.settings || {};
-
-  const [state, dispatch] = useReducer(timerReducer, settings);
-
-  const { pomodoros, setPomodoros } = usePomodoros(userId, 'today', {
-    revalidateOnMount: true,
-  });
+  const [settings, settingsDispatch] = useSettings();
 
   const {
-    time,
-    run,
+    time: savedTime,
     inSession,
     task,
     pomodoro,
@@ -114,23 +48,18 @@ export const TimerProvider = ({ children }) => {
     autostart,
     alarm,
     ticking,
-    change,
-  } = state;
+  } = settings;
 
+  const [state, dispatch] = useReducer(timerReducer, { time: savedTime });
+
+  const { time, run } = state;
+
+  const { setPomodoros } = usePomodoros(user.id, 'today');
+
+  const timeRef = useRef(time);
+  const intervalRef = useRef(null);
   const alarmRef = useRef(null);
   const tickingRef = useRef(null);
-
-  useEffect(() => {
-    if (pomodoros) {
-      const totalTime = pomodoros.reduce((sum, curr) => sum + curr.duration, 0);
-
-      const count = pomodoros.length;
-
-      dispatch({ type: 'SET_TOTAL_TIME', totalTime });
-
-      dispatch({ type: 'SET_COUNT', count });
-    }
-  }, [pomodoros]);
 
   useEffect(() => {
     if (alarm) {
@@ -143,14 +72,28 @@ export const TimerProvider = ({ children }) => {
   }, [alarm, ticking]);
 
   useEffect(() => {
-    if (run && time > 0) {
-      const interval = setInterval(() => {
+    if (time !== timeRef.current) timeRef.current = time;
+  }, [time]);
+
+  useEffect(() => {
+    if (run && time > 0 && !intervalRef.current) {
+      intervalRef.current = setInterval(() => {
         if (tickingRef.current) tickingRef.current.play();
 
-        dispatch({ type: 'SET_TIME', time: time - 1 });
-      }, 1000);
+        dispatch({ type: 'SET_TIME', time: --timeRef.current });
 
-      return () => clearInterval(interval);
+        if (timeRef.current === 0) {
+          clearInterval(intervalRef.current);
+
+          intervalRef.current = null;
+        }
+      }, 1000);
+    }
+
+    if (!run) {
+      clearInterval(intervalRef.current);
+
+      intervalRef.current = null;
     }
   }, [time, run]);
 
@@ -163,7 +106,11 @@ export const TimerProvider = ({ children }) => {
 
         const timeNext = shouldSwitch ? breakTime : pomodoro;
 
-        const date = format(new Date() - pomodoro * 1000, 'yyyy-MM-dd');
+        const date = format(new Date(), 'yyyy-MM-dd');
+
+        dispatch({ type: 'SET_TIME', time: timeNext });
+
+        if (!autostart) dispatch({ type: 'STOP_TIMER' });
 
         if (inSession) {
           const savePomodoro = async () => {
@@ -202,11 +149,7 @@ export const TimerProvider = ({ children }) => {
           }
         }
 
-        dispatch({ type: 'SET_TIME', time: timeNext });
-
-        if (shouldSwitch || !inSession) dispatch({ type: 'SET_IN_SESSION' });
-
-        if (!autostart) dispatch({ type: 'STOP_TIMER' });
+        settingsDispatch({ type: 'SET_IN_SESSION' });
       }, 1000);
 
       return () => clearTimeout(timeout);
@@ -226,38 +169,18 @@ export const TimerProvider = ({ children }) => {
     autostart,
     user,
     userDispatch,
+    settingsDispatch,
     setPomodoros,
   ]);
 
   useEffect(() => {
-    if (change) {
-      const update = async () => {
-        const result = await fetch(`api/user/${user.id}/settings`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            [change]: state[change],
-            ...(change === 'inSession' && { time: state.time }),
-            ...(change === 'count' && { totalTime: state.totalTime }),
-          }),
-        }).then((res) => res.json());
+    const saveTime = () =>
+      settingsDispatch({ type: 'SAVE_TIME', time: timeRef.current });
 
-        if (result.error) console.error(result.error);
+    window.addEventListener('beforeunload', saveTime);
 
-        if (result.success) dispatch({ type: 'CLEAR_CHANGE' });
-      };
-
-      if (change !== 'time') {
-        update();
-      } else {
-        window.addEventListener('beforeunload', update);
-
-        return () => window.removeEventListener('beforeunload', update);
-      }
-    }
-  }, [state, change, user]);
+    return () => window.removeEventListener('beforeunload', saveTime);
+  }, [settingsDispatch]);
 
   const value = [state, dispatch];
 
