@@ -14,16 +14,17 @@ const userReducer = (state, action) => {
         change: 'level',
       };
     case 'SET_EXP':
-      const change =
-        action.exp >= state.expMin + state.expReq ? 'levelUp' : 'exp';
+      const { level, expMin, expReq } = state;
+
+      const change = action.exp >= expMin + expReq ? 'levelUp' : 'exp';
 
       return {
         ...state,
         exp: action.exp,
         ...(change === 'levelUp' && {
-          level: state.level + 1,
-          expMin: state.expMin + state.expReq,
-          expReq: Math.round(state.expReq * 1.1),
+          level: level + 1,
+          expMin: expMin + expReq,
+          expReq: Math.ceil(expReq * 1.1),
         }),
         change,
       };
@@ -35,12 +36,9 @@ const userReducer = (state, action) => {
         change: 'streak',
       };
     case 'SET_USER':
-      return action.user
-        ? {
-            ...action.user,
-            loading: false,
-          }
-        : undefined;
+      const { user } = action;
+
+      return user;
     case 'CLEAR_CHANGE':
       return {
         ...state,
@@ -58,33 +56,36 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     if (status !== 'loading') {
-      if (session) {
-        dispatch({ type: 'SET_USER', user: session.user });
-      } else dispatch({ type: 'SET_USER' });
+      const user = session ? { ...session.user, loading: false } : undefined;
+
+      dispatch({ type: 'SET_USER', user });
     }
   }, [session, status]);
 
   useEffect(() => {
     if (state && state.change) {
       const update = async () => {
-        const { level, exp, expMin, expReq, change } = state;
+        const { level, exp, expMin, expReq, streak, streakDate, change } =
+          state;
+
         const result = await fetch(`api/user/${state.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            ...(state.change !== 'levelUp' && {
-              [state.change]: state[state.change],
-            }),
-            ...(state.change === 'streak' && {
+            ...(change !== 'levelUp'
+              ? {
+                  [change]: state[change],
+                }
+              : {
+                  level,
+                  exp,
+                  expMin,
+                  expReq,
+                }),
+            ...(change === 'streak' && {
               streakDate: state.streakDate,
-            }),
-            ...(state.change === 'levelUp' && {
-              level: state.level,
-              exp: state.exp,
-              expMin: state.expMin,
-              expReq: state.expReq,
             }),
           }),
         }).then((res) => res.json());
