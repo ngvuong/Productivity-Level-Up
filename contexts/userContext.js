@@ -14,15 +14,18 @@ const userReducer = (state, action) => {
         change: 'level',
       };
     case 'SET_EXP':
+      const change =
+        action.exp >= state.expMin + state.expReq ? 'levelUp' : 'exp';
+
       return {
         ...state,
         exp: action.exp,
-        ...(action.exp >= state.expMin + state.expReq && {
+        ...(change === 'levelUp' && {
           level: state.level + 1,
           expMin: state.expMin + state.expReq,
           expReq: Math.round(state.expReq * 1.1),
         }),
-        change: 'exp',
+        change,
       };
     case 'SET_STREAK':
       return {
@@ -64,22 +67,25 @@ export function UserProvider({ children }) {
   useEffect(() => {
     if (state && state.change) {
       const update = async () => {
+        const { level, exp, expMin, expReq, change } = state;
         const result = await fetch(`api/user/${state.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            [state.change]: state[state.change],
+            ...(state.change !== 'levelUp' && {
+              [state.change]: state[state.change],
+            }),
             ...(state.change === 'streak' && {
               streakDate: state.streakDate,
             }),
-            ...(state.change === 'exp' &&
-              state.exp >= state.expMin && {
-                level: state.level,
-                expMin: state.expMin,
-                expReq: state.expReq,
-              }),
+            ...(state.change === 'levelUp' && {
+              level: state.level,
+              exp: state.exp,
+              expMin: state.expMin,
+              expReq: state.expReq,
+            }),
           }),
         }).then((res) => res.json());
 
