@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
-import Overlay from '../layout/Overlay';
-import Spinner from '../layout/Spinner';
 import Stat from '../ui/Stat';
 import Task from './Task';
 import useTasks from '../../hooks/useTasks';
@@ -10,19 +8,11 @@ import { useSettings } from '../../contexts/settingsContext';
 import styles from '../../styles/Overview.module.scss';
 
 export default function Overview({ user }) {
-  const { tasks, isLoading, setTasks } = useTasks(user.id, {
+  const { tasks, setTasks } = useTasks(user.id, {
+    fallbackData: user.tasks,
     revalidateOnMount: true,
   });
-
   const [{ totalTime, count }] = useSettings();
-
-  if (isLoading) {
-    return (
-      <Overlay>
-        <Spinner />
-      </Overlay>
-    );
-  }
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
