@@ -89,15 +89,13 @@ const settingsReducer = (state, action) => {
 export const SettingsProvider = ({ children }) => {
   const [user] = useUser();
 
-  const { id, userId, ...settings } = user?.settings;
+  const { id, userId, ...settings } = user?.settings || {};
 
   const [state, dispatch] = useReducer(settingsReducer, settings || {});
 
   const { pomodoros } = usePomodoros(userId, 'today', {
     revalidateOnMount: true,
   });
-
-  const { change } = state;
 
   useEffect(() => {
     if (pomodoros) {
@@ -112,8 +110,9 @@ export const SettingsProvider = ({ children }) => {
   }, [pomodoros]);
 
   useEffect(() => {
-    if (change) {
-      console.log(change);
+    if (state && state.change) {
+      const { change, totalTime } = state;
+
       const update = async () => {
         const result = await fetch(`api/user/${userId}/settings`, {
           method: 'PUT',
@@ -122,18 +121,18 @@ export const SettingsProvider = ({ children }) => {
           },
           body: JSON.stringify({
             [change]: state[change],
-            ...(change === 'count' && { totalTime: state.totalTime }),
+            ...(change === 'count' && { totalTime }),
           }),
         }).then((res) => res.json());
 
         if (result.error) console.error(result.error);
 
-        if (result.success) dispatch({ type: 'CLEAR_CHANGE' });
+        dispatch({ type: 'CLEAR_CHANGE' });
       };
 
       update();
     }
-  }, [state, change, userId]);
+  }, [state, userId]);
 
   const value = [state, dispatch];
 
