@@ -34,7 +34,7 @@ export default NextAuth({
       const currentUser = await prisma.user.findUnique({
         where: { id: user.id },
         include: {
-          tasks: true,
+          tasks: { include: { project: true, tags: true } },
           projects: true,
           settings: true,
           pomos: true,
