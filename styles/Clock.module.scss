@@ -13,6 +13,8 @@
       position: absolute;
       top: 54.1%;
       left: 50%;
+      max-width: 58.5%;
+      max-height: 58.5%;
       background-color: var(--color-primary);
       border-radius: 50%;
       transform: translate(-50%, -50%);
@@ -71,7 +73,6 @@
     color: var(--color-primary);
     font-size: 5rem;
     font-weight: bold;
-    font-style: italic;
     line-height: 1;
     text-shadow: 1px 1px 1px var(--color-overlay);
 
