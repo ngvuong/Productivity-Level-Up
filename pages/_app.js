@@ -1,7 +1,8 @@
+import { SWRConfig } from 'swr';
 import { SessionProvider } from 'next-auth/react';
 import { UserProvider } from '../contexts/userContext';
+import { SettingsProvider } from '../contexts/settingsContext';
 import { TimerProvider } from '../contexts/timerContext';
-import { SWRConfig } from 'swr';
 import Layout from '../components/layout/Layout';
 
 import '../styles/globals.scss';
@@ -17,11 +18,13 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         }}
       >
         <UserProvider>
-          <TimerProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </TimerProvider>
+          <SettingsProvider>
+            <TimerProvider>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </TimerProvider>
+          </SettingsProvider>
         </UserProvider>
       </SWRConfig>
     </SessionProvider>
