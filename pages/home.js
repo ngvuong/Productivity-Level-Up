@@ -32,9 +32,9 @@ export default function Home({ user }) {
             </a>
           </Link>
         </div>
-        <Level user={user} />
+        <Level />
       </header>
-      <Overview userId={user.id} />
+      <Overview user={user} />
     </main>
   );
 }
