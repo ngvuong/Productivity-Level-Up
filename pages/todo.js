@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import Select from 'react-select';
 import Overlay from '../components/layout/Overlay';
-import Spinner from '../components/layout/Spinner';
 import Task from '../components/main/Task';
 import TaskCard from '../components/ui/TaskCard';
 import useTasks from '../hooks/useTasks';
@@ -30,7 +29,8 @@ export default function Todo({ user }) {
   const [options, setOptions] = useState([]);
   const [legacyOptions, setLegacyOptions] = useState([]);
 
-  const { tasks, isLoading, setTasks } = useTasks(user.id, {
+  const { tasks, setTasks } = useTasks(user.id, {
+    fallbackData: user.tasks,
     revalidateOnMount: true,
   });
 
@@ -76,14 +76,6 @@ export default function Todo({ user }) {
       );
     }
   }, [tasksByDate, today]);
-
-  if (isLoading) {
-    return (
-      <Overlay>
-        <Spinner />
-      </Overlay>
-    );
-  }
 
   const getData = () => {
     const { name, project, tags, priority, date, notes } = taskDetails;
