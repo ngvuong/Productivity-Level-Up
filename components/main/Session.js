@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUser } from '../../contexts/userContext';
 
 import { MdWbSunny } from 'react-icons/md';
@@ -6,11 +6,20 @@ import styles from '../../styles/Session.module.scss';
 
 export default function Session({ session }) {
   const [claimed, setClaimed] = useState(false);
+  const [random, setRandom] = useState(false);
 
   const [user, dispatch] = useUser();
 
   const minutes = session.duration / 60;
   const size = 2 + minutes / 10;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRandom((prev) => !prev);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const onClaim = async () => {
     // const result = await fetch(`api/pomodoros/${session.id}`, {
@@ -36,6 +45,9 @@ export default function Session({ session }) {
           : `min(${Math.floor(Math.random() * 101)}%, 100% - ${size / 2}rem)`,
         fontSize: `${size}rem`,
         animationDelay: `${Math.floor(Math.random() * 2001)}ms`,
+        // transform: `translate(${Math.floor(Math.random() * 101)}%, ${Math.floor(
+        //   Math.random() * 101
+        // )}%)`,
       }}
     >
       <MdWbSunny />
