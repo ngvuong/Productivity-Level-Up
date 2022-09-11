@@ -1,11 +1,11 @@
 import Timer from '../components/ui/Timer';
 import Stat from '../components/ui/Stat';
-import { useTimer } from '../contexts/timerContext';
+import { useSettings } from '../contexts/settingsContext';
 
 import styles from '../styles/Pomodoro.module.scss';
 
 export default function Pomodoro({ user }) {
-  const [{ count, totalTime }] = useTimer();
+  const [{ count, totalTime }] = useSettings();
 
   return (
     <main className={styles.pomodoro}>
