@@ -89,7 +89,6 @@ export default function Timer({ userId }) {
       timerDispatch({ type: 'STOP_TIMER' });
 
       const shouldSwitch = breakTime && inSession;
-
       const timeNext = shouldSwitch ? breakTime : pomodoro;
 
       const timeout = setTimeout(() => {
@@ -97,7 +96,8 @@ export default function Timer({ userId }) {
 
         if (runningRef.current) timerDispatch({ type: 'START_TIMER' });
 
-        if (shouldSwitch || !inSession) dispatch({ type: 'SET_IN_SESSION' });
+        dispatch({ type: 'SET_IN_SESSION' });
+
         setSkip(false);
       }, 100);
 
