@@ -1,11 +1,34 @@
 import prisma from '../../../lib/prisma';
+import { format } from 'date-fns';
 
 export default async function handler(req, res) {
   const { taskid } = req.query;
 
   if (req.method === 'PUT') {
     try {
-      const { data } = req.body;
+      const data = req.body;
+
+      if (data.date) {
+        const existingTasks = await prisma.task.findMany({
+          where: {
+            name: data.name,
+          },
+        });
+
+        const today = format(new Date(), 'yyyy-MM-dd');
+
+        const task = existingTasks.find(
+          (task) => task.id === taskid && task.date < today
+        );
+
+        if (task) return res.status(400).json({ error: 'Cannot modify date' });
+
+        const isUnique = !existingTasks.some((task) => task.date === data.date);
+
+        if (!isUnique) {
+          return res.status(409).json({ error: 'Task already exists' });
+        }
+      }
 
       const newData = data.tags
         ? { ...data, tags: { set: data.tags.map((tag) => ({ id: tag })) } }
