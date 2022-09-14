@@ -9,36 +9,40 @@ import { plumSelectStyles } from '../lib/selectStyles';
 import styles from '../styles/Garden.module.scss';
 
 export default function Garden({ user }) {
-  const [selected, setSelected] = useState();
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const [selected, setSelected] = useState({ label: 'Today', value: today });
   const [options, setOptions] = useState([]);
 
   const { pomodoros } = usePomodoros(user.id, 'all', {
-    fallbackData: user?.pomos,
     revalidateOnMount: true,
   });
 
   useEffect(() => {
     if (pomodoros) {
-      const reducedPomodoros = pomodoros.reduce((acc, curr) => {
-        if (!curr.claimed) {
-          if (!acc[curr.date]) acc[curr.date] = [];
+      setOptions(() => {
+        const options = pomodoros.reduce((acc, curr) => {
+          const date = curr.date;
+          const isUnique = !acc.some((p) => p.value === date);
 
-          acc[curr.date].push(curr);
+          if (!curr.claimed && isUnique) {
+            acc.push({
+              label:
+                date === today
+                  ? 'Today'
+                  : format(parseISO(date), 'MMM do yyyy'),
+              value: date,
+            });
+          }
 
           return acc;
-        }
-      }, {});
+        }, []);
 
-      const today = format(new Date(), 'yyyy-MM-dd');
+        setSelected(options[0]);
 
-      setOptions(
-        Object.keys(reducedPomodoros).map((key) => ({
-          label: key === today ? 'Today' : format(parseISO(key), 'MMM d, yyyy'),
-          value: key,
-        }))
-      );
+        return options;
+      });
     }
-  }, [pomodoros]);
+  }, [pomodoros, today]);
 
   return (
     <main className={styles.garden}>
