@@ -376,8 +376,10 @@ const TaskCard = forwardRef(
               onClick={async () => {
                 if (valid && !hasErrors) {
                   await onSave();
-                  defaultDetails.current = taskDetails;
-                  task ? setEdit(false) : setShowCard(false);
+                  if (task) {
+                    setEdit(false);
+                    defaultDetails.current = taskDetails;
+                  } else setShowCard(false);
                 }
               }}
               disabled={!valid || hasErrors}
