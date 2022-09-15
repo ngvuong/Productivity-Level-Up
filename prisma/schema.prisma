@@ -47,8 +47,10 @@ model User {
   level         Int       @default(1)
   exp           Int       @default(0)
   expMin        Int       @default(0)
-  expToNext     Int       @default(50)
+  expReq        Int       @default(50)
+  expRate       Float     @default(1.2)
   streak        Int       @default(0)
+  streakDate    String?
   projects      Project[]
   tasks         Task[]
   pomos         Pomo[]
@@ -69,9 +71,12 @@ model VerificationToken {
 model Settings {
   id        String  @id @default(cuid())
   userId    String  @unique
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields:[userId],references:[id], onDelete: Cascade)
   time      Int?
+  totalTime Int?
+  count     Int?
   inSession Boolean @default(true)
+  task      String?
   pomodoro  Int     @default(1800)
   breakTime Int     @default(60)
   autostart Boolean @default(false)
@@ -83,6 +88,8 @@ model Pomo {
   id          String   @id @default(cuid())
   date        String
   duration    Int
+  claimed     Boolean  @default(false)
+  expGained   Float    @default(0)
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   taskId      String?
@@ -91,14 +98,14 @@ model Pomo {
 
 model Project {
   id    String @id @default(cuid())
-  name  String @unique @db.VarChar(20)
+  name  String @unique @db.VarChar(30)
   users User[]
   tasks Task[]
 }
 
 model Task {
   id        String   @id @default(cuid())
-  name      String   @db.VarChar(20)
+  name      String   @db.VarChar(30)
   date      String
   completed Boolean  @default(false)
   priority  Priority @default(P3)
@@ -113,7 +120,7 @@ model Task {
 
 model Tag {
   id    String @id @default(cuid())
-  name  String @unique @db.VarChar(20)
+  name  String @unique @db.VarChar(30)
   users User[]
   tasks Task[]
 }
