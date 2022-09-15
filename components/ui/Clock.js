@@ -29,7 +29,11 @@ export default function Clock({ time, totalTime }) {
   }, [time, totalTime]);
 
   useEffect(() => {
-    setSecondsTick((prev) => ({ ...prev, ones: true }));
+    setCurrentTime((prev) => {
+      if (prev !== time) setSecondsTick((prev) => ({ ...prev, ones: true }));
+
+      return prev;
+    });
 
     const timeout = setTimeout(() => {
       setSecondsTick((prev) => ({ ...prev, ones: false }));
