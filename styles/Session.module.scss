@@ -2,6 +2,36 @@
   position: absolute;
   display: flex;
   color: var(--color-secondary);
-  filter: drop-shadow(var(--color-highlight) 0 0 1rem);
+  filter: drop-shadow(var(--color-highlight) 0 0 2rem);
   cursor: pointer;
+}
+
+.exp,
+.bonus {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  color: var(--color-primary);
+  font-size: 2rem;
+  font-style: italic;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  animation: fadeOut 2s 1.5s ease-out forwards;
+}
+
+.bonus {
+  animation: fadeOut 2s 2s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    top: 100%;
+    visibility: visible;
+    opacity: 1;
+  }
+  to {
+    top: 80%;
+    visibility: hidden;
+    opacity: 0;
+  }
 }
