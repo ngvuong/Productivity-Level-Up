@@ -62,9 +62,17 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     if (state && state.change) {
-      const update = async () => {
-        const { level, exp, expMin, expReq, expRate, streakDate, change } =
-          state;
+      (async function update() {
+        const {
+          level,
+          exp,
+          expMin,
+          expReq,
+          expRate,
+          streak,
+          streakDate,
+          change,
+        } = state;
 
         const result = await fetch(`api/user/${state.id}`, {
           method: 'PUT',
@@ -82,9 +90,10 @@ export function UserProvider({ children }) {
         if (result.error) console.error(result.error);
 
         if (result.success) dispatch({ type: 'CLEAR_CHANGE' });
-      };
 
-      update();
+        if (change === 'streak')
+          dispatch({ type: 'SET_EXP', exp: exp + (level + expRate * streak) });
+      })();
     }
   }, [state]);
 
