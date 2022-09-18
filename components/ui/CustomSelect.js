@@ -24,15 +24,17 @@ export default function CustomSelect({
     setIsLoading(true);
     const newOption = await onCreateNew(value);
 
-    if (multiple) {
-      setSelected([...selected, newOption]);
-      onInputChange({
-        name,
-        value: [...selected.map((s) => s.value), newOption.value],
-      });
-    } else {
-      setSelected(newOption);
-      onInputChange({ name, value: newOption.value });
+    if (newOption) {
+      if (multiple) {
+        setSelected([...selected, newOption]);
+        onInputChange({
+          name,
+          value: [...selected.map((s) => s.value), newOption.value],
+        });
+      } else {
+        setSelected(newOption);
+        onInputChange({ name, value: newOption.value });
+      }
     }
 
     setIsLoading(false);
@@ -59,10 +61,11 @@ export default function CustomSelect({
           isLoading={isLoading}
           isClearable
           isMulti={multiple}
-          styles={customSelectStyles}
           placeholder={`Select or add ${
             multiple ? 'new ' + name : 'a new ' + name
           }`}
+          isOptionDisabled={(option) => selected === option}
+          styles={customSelectStyles}
         />
       ) : (
         <Select
@@ -71,6 +74,7 @@ export default function CustomSelect({
           options={options}
           isClearable={isClearable}
           placeholder={`Select ${name}`}
+          isOptionDisabled={(option) => selected === option}
           styles={customSelectStyles}
         />
       )}
