@@ -21,30 +21,32 @@ export default function Navbar() {
     <>
       <nav className={styles.navbar}>
         <Link href='/home'>
-          <a>
+          <a draggable='false'>
             <RiHome4Fill />
           </a>
         </Link>
         <Link href='/pomodoro'>
-          <a>{run ? <Clock time={time} /> : <RiTimerFill />}</a>
+          <a draggable='false'>
+            {run ? <Clock time={time} /> : <RiTimerFill />}
+          </a>
         </Link>
         <Link href='/garden'>
-          <a>
+          <a draggable='false'>
             <RiPlantFill />
           </a>
         </Link>
         <Link href='/todo'>
-          <a>
+          <a draggable='false'>
             <RiCalendarTodoFill />
           </a>
         </Link>
         <Link href='/stats'>
-          <a>
+          <a draggable='false'>
             <RiNumbersFill />
           </a>
         </Link>
         <Link href='/settings'>
-          <a>
+          <a draggable='false'>
             <RiSettings5Fill />
           </a>
         </Link>
