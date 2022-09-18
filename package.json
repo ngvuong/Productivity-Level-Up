@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.3",
-    "@prisma/client": "^4.3.0",
+    "@prisma/client": "^4.3.1",
     "date-fns": "^2.29.1",
     "next": "12.2.1",
     "next-auth": "^4.9.0",
@@ -24,7 +24,7 @@
   "devDependencies": {
     "eslint": "8.19.0",
     "eslint-config-next": "12.2.1",
-    "prisma": "^4.3.0",
+    "prisma": "^4.3.1",
     "sass": "^1.53.0"
   }
 }
