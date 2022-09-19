@@ -45,10 +45,15 @@ model User {
   accounts      Account[]
   sessions      Session[]
   level         Int       @default(1)
-  exp           Int       @default(0)
-  expMin        Int       @default(0)
-  expReq        Int       @default(50)
+  vLevel        Int       @default(1)
+  exp           Float     @default(0)
+  vExp          Float     @default(0)
   expRate       Float     @default(1.2)
+  vExpRate      Float     @default(1.2)
+  expMin        Int       @default(0)
+  vExpMin       Int       @default(0)
+  expReq        Int       @default(50)
+  vExpReq       Int       @default(50)
   streak        Int       @default(0)
   streakDate    String?
   projects      Project[]
@@ -71,7 +76,7 @@ model VerificationToken {
 model Settings {
   id        String  @id @default(cuid())
   userId    String  @unique
-  user      User    @relation(fields:[userId],references:[id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   time      Int?
   totalTime Int?
   count     Int?
@@ -85,22 +90,16 @@ model Settings {
 }
 
 model Pomo {
-  id          String   @id @default(cuid())
-  date        String
-  duration    Int
-  claimed     Boolean  @default(false)
-  expGained   Float    @default(0)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  taskId      String?
-  task        Task?    @relation(fields: [taskId], references: [id])
-}
-
-model Project {
-  id    String @id @default(cuid())
-  name  String @unique @db.VarChar(30)
-  users User[]
-  tasks Task[]
+  id       String  @id @default(cuid())
+  date     String
+  duration Int
+  claimed  Boolean @default(false)
+  exp      Float   @default(0)
+  bonus    Float   @default(0)
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId   String?
+  task     Task?   @relation(fields: [taskId], references: [id])
 }
 
 model Task {
@@ -116,6 +115,13 @@ model Task {
   project   Project? @relation(fields: [projectId], references: [id])
   projectId String?
   tags      Tag[]
+}
+
+model Project {
+  id    String @id @default(cuid())
+  name  String @unique @db.VarChar(30)
+  users User[]
+  tasks Task[]
 }
 
 model Tag {
