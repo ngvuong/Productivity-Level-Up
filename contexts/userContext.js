@@ -16,7 +16,7 @@ const userReducer = (state, action) => {
 
       while (exp >= expNext) {
         level++;
-        expRate = +(expRate + 0.2).toFixed(2);
+        expRate = level / 2;
         expMin = expNext;
         expReq = Math.ceil(+(expReq * 1.1).toFixed(2));
         expNext += expReq;
@@ -36,7 +36,7 @@ const userReducer = (state, action) => {
 
       while (vExp >= expNext) {
         vLevel++;
-        vExpRate = +(vExpRate + 0.2).toFixed(2);
+        vExpRate = vLevel / 2;
         vExpMin = expNext;
         vExpReq = Math.ceil(+(vExpReq * 1.1).toFixed(2));
         expNext += vExpReq;
