@@ -1,16 +1,19 @@
 .stat {
   display: flex;
-  gap: 0.4rem;
   height: 3rem;
-  width: fit-content;
-  text-transform: uppercase;
-  font-weight: bold;
-  background-color: var(--color-primary-darker);
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--color-accent);
-  box-shadow: 0 0 0.5rem var(--color-accent);
-  transform: skewX(-25deg);
-  cursor: default;
+
+  &.full {
+    gap: 0.4rem;
+    width: fit-content;
+    text-transform: uppercase;
+    font-weight: bold;
+    background-color: var(--color-primary-darker);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-accent);
+    box-shadow: 0 0 0.5rem var(--color-accent);
+    transform: skewX(-25deg);
+    cursor: default;
+  }
 
   &Value {
     display: flex;
