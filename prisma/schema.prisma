@@ -48,12 +48,12 @@ model User {
   vLevel        Int       @default(1)
   exp           Float     @default(0)
   vExp          Float     @default(0)
-  expRate       Float     @default(1.2)
-  vExpRate      Float     @default(1.2)
+  expRate       Float     @default(0.5)
+  vExpRate      Float     @default(0.5)
   expMin        Int       @default(0)
   vExpMin       Int       @default(0)
-  expReq        Int       @default(50)
-  vExpReq       Int       @default(50)
+  expReq        Int       @default(100)
+  vExpReq       Int       @default(100)
   streak        Int       @default(0)
   streakDate    String?
   projects      Project[]
