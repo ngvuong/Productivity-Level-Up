@@ -1,11 +1,13 @@
 .stat {
   flex: 1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   height: 3rem;
+  min-width: fit-content;
+  overflow: hidden;
 
   &.full {
-    gap: 0.5rem;
     color: var(--color-alt-4);
     text-transform: uppercase;
     font-weight: 900;
@@ -17,19 +19,8 @@
     cursor: default;
   }
 
-  &Value {
-    display: flex;
-    flex-direction: column;
-    min-width: 1rem;
-    overflow: hidden;
-
-    .change {
-      transform: translateY(-100%);
-      transition: transform 200ms ease-in;
-    }
-  }
-
-  & > span {
-    width: max-content;
+  .change {
+    transform: translateY(-100%);
+    transition: transform 200ms ease-in;
   }
 }
