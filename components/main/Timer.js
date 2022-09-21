@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import Select from 'react-select';
-import Clock from './Clock';
+import Clock from '../ui/Clock';
 import useTasks from '../../hooks/useTasks';
 import { useSettings } from '../../contexts/settingsContext';
 import { useTimer } from '../../contexts/timerContext';
@@ -12,7 +12,7 @@ import {
   MdSkipNext,
   MdTaskAlt,
   MdAccessTimeFilled,
-  MdCoffee,
+  MdEmojiFoodBeverage,
   MdAutorenew,
   MdNotifications,
   MdVolumeUp,
@@ -65,7 +65,6 @@ export default function Timer({ userId }) {
   useEffect(() => {
     if (tasks) {
       const today = format(new Date(), 'yyyy-MM-dd');
-
       const tasksToday = tasks.filter((task) => task.date === today);
 
       setTaskOptions(
@@ -141,6 +140,7 @@ export default function Timer({ userId }) {
                 dispatch({ type: 'SET_TASK', task: option?.value || '' });
               }}
               options={taskOptions}
+              openMenuOnFocus
               isOptionDisabled={({ value }) => taskSelected?.value === value}
               menuPlacement='top'
               isClearable
@@ -161,7 +161,7 @@ export default function Timer({ userId }) {
                 }
               }}
               options={timeOptionsRef.current}
-              isSearchable={false}
+              openMenuOnFocus
               isDisabled={inSession}
               isOptionDisabled={({ value }) => timeSelected.value === value}
               menuPlacement='top'
@@ -169,7 +169,7 @@ export default function Timer({ userId }) {
             />
           </label>
           <label className={styles.break}>
-            <MdCoffee />
+            <MdEmojiFoodBeverage />
             <Select
               value={breakSelected}
               onChange={(option) => {
@@ -182,7 +182,7 @@ export default function Timer({ userId }) {
                 }
               }}
               options={breakOptionsRef.current}
-              isSearchable={false}
+              openMenuOnFocus
               isDisabled={!inSession}
               isOptionDisabled={({ value }) => breakSelected.value === value}
               menuPlacement='top'
@@ -199,8 +199,8 @@ export default function Timer({ userId }) {
               type='checkbox'
               id='autostart'
               checked={autostart}
-              onChange={({ target }) =>
-                dispatch({ type: 'SET_AUTOSTART', autostart: target.checked })
+              onChange={({ target: { checked } }) =>
+                dispatch({ type: 'SET_AUTOSTART', autostart: checked })
               }
             />
             <label htmlFor='autostart' />
@@ -213,8 +213,8 @@ export default function Timer({ userId }) {
               type='checkbox'
               id='alarmSound'
               checked={alarm}
-              onChange={({ target }) =>
-                dispatch({ type: 'SET_ALARM', alarm: target.checked })
+              onChange={({ target: { checked } }) =>
+                dispatch({ type: 'SET_ALARM', alarm: checked })
               }
             />
             <label htmlFor='alarmSound' />
@@ -227,8 +227,8 @@ export default function Timer({ userId }) {
               type='checkbox'
               id='tickingSound'
               checked={ticking}
-              onChange={({ target }) =>
-                dispatch({ type: 'SET_TICKING', ticking: target.checked })
+              onChange={({ target: { checked } }) =>
+                dispatch({ type: 'SET_TICKING', ticking: checked })
               }
             />
             <label htmlFor='tickingSound' />
