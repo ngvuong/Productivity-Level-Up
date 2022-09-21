@@ -8,26 +8,39 @@ import styles from '../../styles/Level.module.scss';
 export default function Level() {
   const [{ level, exp, expMin, expReq, streak, streakDate }, dispatch] =
     useUser();
+
   const newPercentage = +(((exp - expMin) / expReq) * 100).toFixed(2);
 
   const [currentLevel, setCurrentLevel] = useState(level);
-  const [percentage, setPercentage] = useState(newPercentage);
   const [levelUp, setLevelUp] = useState(0);
+  const [percentage, setPercentage] = useState(newPercentage);
 
   useEffect(() => {
     if (level !== currentLevel) {
       if (levelUp) {
-        setPercentage(100);
+        let timeout;
 
-        const timeout = setTimeout(() => {
+        setPercentage((prev) => {
+          if (prev) return 100;
+
+          timeout = setTimeout(() => setPercentage(100), 500);
+
+          return prev;
+        });
+
+        const timeout2 = setTimeout(() => {
           setPercentage(0);
           setLevelUp((prev) => --prev);
           setCurrentLevel((prev) => ++prev);
-        }, 2100);
+        }, 2500);
 
-        return () => clearTimeout(timeout);
+        return () => [timeout, timeout2].forEach(clearTimeout);
       } else setLevelUp(level - currentLevel);
-    } else setPercentage(newPercentage);
+    } else {
+      const timeout = setTimeout(() => setPercentage(newPercentage), 500);
+
+      return () => clearTimeout(timeout);
+    }
   }, [level, currentLevel, levelUp, newPercentage]);
 
   useEffect(() => {
@@ -49,7 +62,9 @@ export default function Level() {
         <div className={styles.level}>
           Level <Stat stat={currentLevel} />
         </div>
-        <div className={styles.streak}>Non-Zero Streak: {streak}</div>
+        <div className={styles.streak}>
+          Non-Zero Streak: <Stat stat={streak} />
+        </div>
       </div>
       <div className={styles.exp}>
         <div className={styles.expBar}>
@@ -69,13 +84,12 @@ export default function Level() {
         </div>
         <div className={styles.expInfo}>
           <span>{exp}</span>
-          <span>{`${exp - expMin}/${expReq} (${percentage}%)`}</span>
+          <span>{`${+(exp - expMin).toFixed(
+            2
+          )}/${expReq} (${percentage}%)`}</span>
           <span>{expMin + expReq}</span>
         </div>
       </div>
-      {/* <button onClick={() => dispatch({ type: 'SET_EXP', exp: 550 })}>
-        click
-      </button> */}
     </div>
   );
 }
