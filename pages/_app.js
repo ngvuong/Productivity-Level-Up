@@ -14,7 +14,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         value={{
           fetcher: (...args) => fetch(...args).then((res) => res.json()),
           errorRetryCount: 3,
-          revalidateOnMount: false,
         }}
       >
         <UserProvider>
