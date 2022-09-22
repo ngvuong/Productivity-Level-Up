@@ -13,7 +13,7 @@ export default function Stat({ stat, label, pluralize = true }) {
       const timeout = setTimeout(() => {
         setChange(false);
         setCurrent(stat);
-      }, 200);
+      }, 210);
 
       return () => clearTimeout(timeout);
     }
@@ -21,11 +21,15 @@ export default function Stat({ stat, label, pluralize = true }) {
 
   return (
     <div className={`${styles.stat} ${label ? styles.full : ''}`}>
-      <div className={styles.statValue}>
-        <span className={change ? styles.change : undefined}>{current}</span>
-        <span className={change ? styles.change : undefined}>{stat}</span>
-      </div>
-      {label && <span>{label + (stat !== 1 && pluralize ? 's' : '')}</span>}
+      <span className={change ? styles.change : undefined}>
+        {current +
+          (label ? ' ' + label + (current !== 1 && pluralize ? 's' : '') : '')}
+      </span>
+
+      <span className={change ? styles.change : undefined}>
+        {stat +
+          (label ? ' ' + label + (stat !== 1 && pluralize ? 's' : '') : '')}
+      </span>
     </div>
   );
 }
