@@ -3,15 +3,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 3rem;
+  height: inherit;
   min-width: fit-content;
   overflow: hidden;
 
   &.full {
+    height: 3rem;
     color: var(--color-alt-4);
     text-transform: uppercase;
     font-weight: 900;
-    background-color: var(--color-alt-2);
+    background: linear-gradient(90deg, #d3d3d3 0%, #c0c0c0cc 100%);
     padding: 0.5rem 1rem;
     border: 0.2rem solid var(--color-highlight);
     box-shadow: 0 0 0.5rem var(--color-accent);
