@@ -25,11 +25,9 @@ const TaskCard = forwardRef(
 
     const [{ id: userId }] = useUser();
 
-    const { projects, setProjects } = useProjects(userId, {
-      revalidateOnMount: true,
-    });
+    const { projects, setProjects } = useProjects(userId);
 
-    const { tags, setTags } = useTags(userId, { revalidateOnMount: true });
+    const { tags, setTags } = useTags(userId);
 
     const today = format(new Date(), 'yyyy-MM-dd');
 
