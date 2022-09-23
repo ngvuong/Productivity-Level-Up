@@ -5,29 +5,51 @@ import { useUser } from './userContext';
 const settingsContext = createContext();
 
 const settingsReducer = (state, action) => {
-  switch (action.type) {
+  const {
+    type,
+    time,
+    exp,
+    totalTime,
+    count,
+    task,
+    pomodoro,
+    breakTime,
+    autostart,
+    alarm,
+    ticking,
+  } = action;
+
+  switch (type) {
     case 'SAVE_TIME':
       return {
         ...state,
-        ...(state.time !== action.time && {
-          time: action.time,
-          change: 'time',
+        ...(state.time !== time && {
+          time,
+          change: true,
+        }),
+      };
+    case 'SET_EXP':
+      return {
+        ...state,
+        ...(state.exp !== exp && {
+          exp,
+          change: true,
         }),
       };
     case 'SET_TOTAL_TIME':
       return {
         ...state,
-        ...(state.totalTime !== action.totalTime && {
-          totalTime: action.totalTime,
-          change: 'totalTime',
+        ...(state.totalTime !== totalTime && {
+          totalTime,
+          change: true,
         }),
       };
     case 'SET_COUNT':
       return {
         ...state,
-        ...(state.count !== action.count && {
-          count: action.count,
-          change: 'count',
+        ...(state.count !== count && {
+          count,
+          change: true,
         }),
       };
     case 'SET_IN_SESSION':
@@ -37,100 +59,101 @@ const settingsReducer = (state, action) => {
         ...state,
         ...(inSession !== state.inSession && {
           inSession,
-          change: 'inSession',
+          change: true,
         }),
       };
     case 'SET_TASK':
       return {
         ...state,
-        task: action.task,
-        change: 'task',
+        task,
+        change: true,
       };
     case 'SET_POMODORO':
       return {
         ...state,
-        pomodoro: action.pomodoro,
-        change: 'pomodoro',
+        pomodoro,
+        change: true,
       };
     case 'SET_BREAKTIME':
       return {
         ...state,
-        breakTime: action.breakTime,
-        change: 'breakTime',
+        breakTime,
+        change: true,
       };
     case 'SET_AUTOSTART':
       return {
         ...state,
-        autostart: action.autostart,
-        change: 'autostart',
+        autostart,
+        change: true,
       };
     case 'SET_ALARM':
       return {
         ...state,
-        alarm: action.alarm,
-        change: 'alarm',
+        alarm,
+        change: true,
       };
     case 'SET_TICKING':
       return {
         ...state,
-        ticking: action.ticking,
-        change: 'ticking',
+        ticking,
+        change: true,
       };
     case 'CLEAR_CHANGE':
       return {
         ...state,
-        change: '',
+        change: false,
       };
     default:
-      throw new Error(`Unhandled action type: ${action.type}`);
+      throw new Error(`Unhandled action type: ${type}`);
   }
 };
 
 export const SettingsProvider = ({ children }) => {
-  const [user] = useUser();
-
-  const { id, userId, ...settings } = user?.settings || {};
+  const [
+    {
+      settings: { id, userId, ...settings },
+    },
+  ] = useUser();
 
   const [state, dispatch] = useReducer(settingsReducer, settings || {});
 
-  const { pomodoros } = usePomodoros(userId, 'today', {
-    revalidateOnMount: true,
-  });
+  const { pomodoros } = usePomodoros(userId, 'today');
 
   useEffect(() => {
     if (pomodoros) {
-      const totalTime = pomodoros.reduce((sum, curr) => sum + curr.duration, 0);
+      const { exp, totalTime, count } = pomodoros.reduce(
+        (acc, { exp, bonus, duration }) => {
+          if (curr.claimed) acc.exp = +(acc.exp + exp + bonus).toFixed(2);
+          acc.totalTime += duration;
+          acc.count++;
 
-      const count = pomodoros.length;
+          return acc;
+        },
+        { exp: 0, totalTime: 0, count: 0 }
+      );
 
+      dispatch({ type: 'SET_EXP', exp });
       dispatch({ type: 'SET_TOTAL_TIME', totalTime });
-
       dispatch({ type: 'SET_COUNT', count });
     }
   }, [pomodoros]);
 
   useEffect(() => {
-    if (state && state.change) {
-      const { change, totalTime } = state;
+    if (state.change) {
+      const { change, ...settings } = state;
+      const body = JSON.stringify(settings);
 
-      const update = async () => {
+      (async () => {
         const result = await fetch(`api/user/${userId}/settings`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            [change]: state[change],
-            ...(change === 'count' && { totalTime }),
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body,
         }).then((res) => res.json());
 
         if (result.error) console.error(result.error);
 
         dispatch({ type: 'CLEAR_CHANGE' });
-      };
-
-      update();
+      })();
     }
   }, [state, userId]);
 
