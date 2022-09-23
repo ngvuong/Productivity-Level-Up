@@ -13,14 +13,13 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json(pomodoros);
-    } catch (error) {
+    } catch (err) {
       return res.status(500).json({ error: err.message });
     }
   } else if (req.method === 'POST') {
     try {
-      const { date, duration, taskId } = req.body;
-
-      const data = { userId: userid, date, duration, taskId };
+      const { body } = req;
+      const data = { userId: userid, ...body };
 
       await prisma.pomo.create({
         data,
