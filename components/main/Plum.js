@@ -7,23 +7,52 @@ import { GiFruitTree } from 'react-icons/gi';
 import styles from '../../styles/Plum.module.scss';
 
 export default function Plum({ userId, date }) {
-  const [plum, setPlum] = useState();
-
-  const { pomodoros, setPomodoros } = usePomodoros(userId, date, {
-    revalidateOnMount: true,
+  const [plum, setPlum] = useState({
+    timeAvailable: 0,
+    timeClaimed: 0,
+    expGained: 0,
+    unClaimedExp: 0,
+    unClaimedBonus: 0,
   });
+  const [claim, setClaim] = useState(false);
+
+  const { pomodoros, setPomodoros } = usePomodoros(userId, date);
+
+  const {
+    timeAvailable,
+    timeClaimed,
+    expGained,
+    unClaimedExp,
+    unClaimedBonus,
+  } = plum;
+
+  const transform = `scale(${1 + Math.floor(timeClaimed / 5) * 0.005}, ${
+    1 + Math.floor(timeClaimed / 5) * 0.01
+  })`;
 
   useEffect(() => {
     if (pomodoros) {
-      const init = { timeAvailable: 0, timeClaimed: 0, expGained: 0 };
+      const init = {
+        timeAvailable: 0,
+        timeClaimed: 0,
+        expGained: 0,
+        unClaimedExp: 0,
+        unClaimedBonus: 0,
+      };
 
       const plum = pomodoros.reduce((acc, curr) => {
-        if (curr.claimed) {
-          acc.timeClaimed += curr.duration / 60;
+        const { claimed, duration, exp, bonus } = curr;
 
-          acc.expGained += curr.expGained;
+        if (claimed) {
+          acc.timeClaimed += duration / 60;
+          acc.expGained += exp + bonus;
+          acc.expGained = +acc.expGained.toFixed(2);
         } else {
-          acc.timeAvailable += curr.duration / 60;
+          acc.timeAvailable += duration / 60;
+          acc.unClaimedExp += exp;
+          acc.unClaimedExp = +acc.unClaimedExp.toFixed(2);
+          acc.unClaimedBonus += bonus;
+          acc.unClaimedBonus = +acc.unClaimedBonus.toFixed(2);
         }
 
         return acc;
@@ -37,41 +66,42 @@ export default function Plum({ userId, date }) {
     <div className={styles.plum}>
       {plum && (
         <div className={styles.stats}>
-          <Stat stat={plum.timeAvailable} label='available minute' />
-          <Stat stat={plum.timeClaimed} label='claimed minute' />
-          <Stat stat={plum.expGained} label='gained exp' pluralize={false} />
+          <Stat stat={timeAvailable} label='available minute' />
+          <Stat stat={timeClaimed} label='claimed minute' />
+          <Stat stat={expGained} label='gained exp' pluralize={false} />
         </div>
       )}
+
+      <button onClick={() => setClaim(true)}>CLAIM ALL</button>
 
       {pomodoros && (
         <div className={styles.sessions}>
           {pomodoros
             .filter((pomo) => !pomo.claimed)
-            .map((pomo) => (
+            .map((pomo, i) => (
               <Session
                 key={pomo.id}
                 session={pomo}
-                // timeClaimed={timeClaimed}
-                // setTimeClaimed={setTimeClaimed}
+                claim={
+                  (claim &&
+                    i === 0 && { exp: unClaimedExp, bonus: unClaimedBonus }) ||
+                  claim
+                }
                 setPomodoros={setPomodoros}
               />
             ))}
         </div>
       )}
 
-      <div className={styles.plant}>
+      <div className={styles.plant} style={{ transform }}>
         <svg width='0' height='0'>
           <linearGradient id='gradient' x1='0%' y1='100%' x2='0%' y2='50%'>
             <stop stopColor='#742' offset='0%' />
             <stop stopColor='#9ea' offset='100%' />
           </linearGradient>
         </svg>
-        <GiFruitTree
-          style={{
-            fill: 'url(#gradient)',
-            transform: `scale(${1 + Math.floor(plum?.timeClaimed / 5) * 0.01})`,
-          }}
-        />
+
+        <GiFruitTree style={{ fill: 'url(#gradient)' }} />
       </div>
     </div>
   );
