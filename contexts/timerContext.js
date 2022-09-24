@@ -12,12 +12,12 @@ import { useSettings } from './settingsContext';
 
 const timerContext = createContext();
 
-const timerReducer = (state, action) => {
-  switch (action.type) {
+const timerReducer = (state, { type, time }) => {
+  switch (type) {
     case 'SET_TIME':
       return {
         ...state,
-        time: action.time,
+        time: time,
       };
     case 'START_TIMER':
       return {
@@ -30,7 +30,7 @@ const timerReducer = (state, action) => {
         run: false,
       };
     default:
-      throw new Error(`Unhandled action type: ${action.type}`);
+      throw new Error(`Unhandled action type: ${type}`);
   }
 };
 
@@ -39,22 +39,13 @@ export const TimerProvider = ({ children }) => {
 
   const [settings, settingsDispatch] = useSettings();
 
-  const {
-    time: savedTime,
-    inSession,
-    task,
-    pomodoro,
-    breakTime,
-    autostart,
-    alarm,
-    ticking,
-  } = settings;
+  const { time: savedTime, alarm, ticking } = settings;
 
-  const [state, dispatch] = useReducer(timerReducer, { time: savedTime });
+  const [state, dispatch] = useReducer(timerReducer, { time: 5 });
 
   const { time, run } = state;
 
-  const { setPomodoros } = usePomodoros(user.id, 'today');
+  const { setPomodoros } = usePomodoros(user?.id, 'today');
 
   const timeRef = useRef(time);
   const intervalRef = useRef(null);
@@ -98,14 +89,15 @@ export const TimerProvider = ({ children }) => {
   }, [time, run]);
 
   useEffect(() => {
+    const { inSession, pomodoro, breakTime } = settings;
+
     if (time === 0) {
       if (alarmRef.current) alarmRef.current.play();
 
       const timeout = setTimeout(() => {
+        const { totalTime, task, autostart } = settings;
         const shouldSwitch = breakTime && inSession;
-
         const timeNext = shouldSwitch ? breakTime : pomodoro;
-
         const date = format(new Date(), 'yyyy-MM-dd');
 
         dispatch({ type: 'SET_TIME', time: timeNext });
@@ -113,40 +105,58 @@ export const TimerProvider = ({ children }) => {
         if (!autostart) dispatch({ type: 'STOP_TIMER' });
 
         if (inSession) {
-          const savePomodoro = async () => {
-            const result = await fetch(
-              `api/user/${user.id}/pomodoros/${date}`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  date,
-                  duration: pomodoro,
-                  taskId: task,
-                }),
-              }
-            ).then((res) => res.json());
+          let { id, vLevel, vExp, vExpRate, streak, streakDate } = user;
+
+          const isNewStreak = streakDate !== date;
+
+          if (isNewStreak) {
+            const streakNextDay = streakDate
+              ? format(addDays(parseISO(streakDate), 1), 'yyyy-MM-dd')
+              : null;
+
+            streak = streakNextDay === date ? ++streak : 1;
+
+            userDispatch({ type: 'SET_STREAK', streak, streakDate: date });
+          }
+
+          let time = totalTime / 60;
+          let exp = 0;
+          let bonus = 0;
+
+          for (let i = 0; i < pomodoro / 60; i++) {
+            exp += vExpRate * (1 + Math.floor(time / 5) * 0.01);
+
+            time++;
+
+            const hit = Math.floor(Math.random() * 100 + 1) > 95;
+
+            bonus += (hit + streak / 1000) * vLevel;
+          }
+
+          exp = +exp.toFixed(2);
+          bonus = +bonus.toFixed(2);
+
+          vExp = +(vExp + exp + bonus).toFixed(2);
+
+          userDispatch({ type: 'SET_VIRTUAL_EXP', vExp });
+
+          (async () => {
+            const result = await fetch(`api/user/${id}/pomodoros/${date}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                date,
+                duration: pomodoro,
+                exp,
+                bonus,
+                taskId: task,
+              }),
+            }).then((res) => res.json());
 
             if (result.error) console.error(result.error);
 
             if (result.success) setPomodoros();
-          };
-
-          savePomodoro();
-
-          if (user.streakDate !== date) {
-            const streakNextDay = format(
-              addDays(parseISO(user.streakDate), 1),
-              'yyyy-MM-dd'
-            );
-            const streak = streakNextDay === date ? user.streak + 1 : 1;
-
-            userDispatch({
-              type: 'SET_STREAK',
-              streak,
-              streakDate: date,
-            });
-          }
+          })();
         }
 
         settingsDispatch({ type: 'SET_IN_SESSION' });
@@ -161,17 +171,7 @@ export const TimerProvider = ({ children }) => {
         time: breakTime && !inSession ? breakTime : pomodoro,
       });
     }
-  }, [
-    time,
-    inSession,
-    pomodoro,
-    breakTime,
-    autostart,
-    user,
-    userDispatch,
-    settingsDispatch,
-    setPomodoros,
-  ]);
+  }, [time, user, userDispatch, settings, settingsDispatch, setPomodoros]);
 
   useEffect(() => {
     const saveTime = () =>
