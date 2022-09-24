@@ -42,9 +42,7 @@ export default function Timer({ userId }) {
   const [taskOptions, setTaskOptions] = useState([]);
   const [skip, setSkip] = useState(false);
 
-  const { tasks } = useTasks(userId, {
-    revalidateOnMount: true,
-  });
+  const { tasks } = useTasks(userId);
 
   const runningRef = useRef(run);
 
