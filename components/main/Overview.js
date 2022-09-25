@@ -7,17 +7,12 @@ import { useSettings } from '../../contexts/settingsContext';
 
 import styles from '../../styles/Overview.module.scss';
 
-export default function Overview({ user }) {
-  const { tasks, setTasks } = useTasks(user.id, {
-    fallbackData: user.tasks,
-    revalidateOnMount: true,
-  });
-  const [{ totalTime, count }] = useSettings();
+export default function Overview({ user: { id, tasks: data, streak } }) {
+  const { tasks, setTasks } = useTasks(id, { fallbackData: data });
+  const [{ exp, totalTime, count }] = useSettings();
 
   const today = format(new Date(), 'yyyy-MM-dd');
-
   const tasksToday = tasks.filter((task) => task.date === today);
-
   const completedTaskCount = tasksToday.filter((task) => task.completed).length;
 
   return (
@@ -27,8 +22,8 @@ export default function Overview({ user }) {
         <Stat stat={completedTaskCount} label='task' />
         <Stat stat={count} label='session' />
         <Stat stat={Math.floor(totalTime / 60)} label='minute' />
-        <Stat stat={100} label='exp' />
-        <Stat stat={user.streak} label='non-zero day' />
+        <Stat stat={exp} label='exp' pluralize={false} />
+        <Stat stat={streak} label='non-zero day' />
       </div>
 
       <h3>Tasks</h3>
