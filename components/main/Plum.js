@@ -7,58 +7,48 @@ import { GiFruitTree } from 'react-icons/gi';
 import styles from '../../styles/Plum.module.scss';
 
 export default function Plum({ userId, date }) {
-  const [plum, setPlum] = useState({
-    timeAvailable: 0,
-    timeClaimed: 0,
-    expGained: 0,
-    unClaimedExp: 0,
-    unClaimedBonus: 0,
-  });
+  const [plum, setPlum] = useState();
   const [claim, setClaim] = useState(false);
 
   const { pomodoros, setPomodoros } = usePomodoros(userId, date);
 
   const {
-    timeAvailable,
-    timeClaimed,
-    expGained,
-    unClaimedExp,
-    unClaimedBonus,
-  } = plum;
+    claimedTime = 0,
+    claimedExp = 0,
+    unclaimedTime = 0,
+    unclaimedExp = 0,
+    unclaimedBonus = 0,
+  } = plum || {};
 
-  const transform = `scale(${1 + Math.floor(timeClaimed / 5) * 0.005}, ${
-    1 + Math.floor(timeClaimed / 5) * 0.01
-  })`;
+  const scale = (mult) => 1 + Math.floor(claimedTime / 5) * mult;
+
+  const transform = `scale(${scale(0.005)}, ${scale(0.01)})`;
 
   useEffect(() => {
     if (pomodoros) {
-      const init = {
-        timeAvailable: 0,
-        timeClaimed: 0,
-        expGained: 0,
-        unClaimedExp: 0,
-        unClaimedBonus: 0,
-      };
+      setPlum(
+        pomodoros.reduce((acc, { claimed, duration, exp, bonus }) => {
+          const {
+            claimedTime = 0,
+            claimedExp = 0,
+            unclaimedTime = 0,
+            unclaimedExp = 0,
+            unclaimedBonus = 0,
+          } = acc;
+          const minutes = duration / 60;
 
-      const plum = pomodoros.reduce((acc, curr) => {
-        const { claimed, duration, exp, bonus } = curr;
+          if (claimed) {
+            acc.claimedTime = claimedTime + minutes;
+            acc.claimedExp = +(claimedExp + exp + bonus).toFixed(2);
+          } else {
+            acc.unclaimedTime = unclaimedTime + minutes;
+            acc.unclaimedExp = +(unclaimedExp + exp).toFixed(2);
+            acc.unclaimedBonus = +(unclaimedBonus + bonus).toFixed(2);
+          }
 
-        if (claimed) {
-          acc.timeClaimed += duration / 60;
-          acc.expGained += exp + bonus;
-          acc.expGained = +acc.expGained.toFixed(2);
-        } else {
-          acc.timeAvailable += duration / 60;
-          acc.unClaimedExp += exp;
-          acc.unClaimedExp = +acc.unClaimedExp.toFixed(2);
-          acc.unClaimedBonus += bonus;
-          acc.unClaimedBonus = +acc.unClaimedBonus.toFixed(2);
-        }
-
-        return acc;
-      }, init);
-
-      setPlum(plum);
+          return acc;
+        }, {})
+      );
     }
   }, [pomodoros]);
 
@@ -66,13 +56,15 @@ export default function Plum({ userId, date }) {
     <div className={styles.plum}>
       {plum && (
         <div className={styles.stats}>
-          <Stat stat={timeAvailable} label='available minute' />
-          <Stat stat={timeClaimed} label='claimed minute' />
-          <Stat stat={expGained} label='gained exp' pluralize={false} />
+          <Stat stat={unclaimedTime} label='available minute' />
+          <Stat stat={claimedTime} label='claimed minute' />
+          <Stat stat={claimedExp} label='gained exp' singular />
         </div>
       )}
 
-      <button onClick={() => setClaim(true)}>CLAIM ALL</button>
+      <button onClick={() => (!claim ? setClaim(true) : null)} disabled={claim}>
+        CLAIM ALL
+      </button>
 
       {pomodoros && (
         <div className={styles.sessions}>
@@ -84,7 +76,7 @@ export default function Plum({ userId, date }) {
                 session={pomo}
                 claim={
                   (claim &&
-                    i === 0 && { exp: unClaimedExp, bonus: unClaimedBonus }) ||
+                    i === 0 && { exp: unclaimedExp, bonus: unclaimedBonus }) ||
                   claim
                 }
                 setPomodoros={setPomodoros}
