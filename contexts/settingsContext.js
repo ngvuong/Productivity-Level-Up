@@ -18,7 +18,7 @@ const settingsReducer = (state, action) => {
     alarm,
     ticking,
   } = action;
-
+  console.log('run');
   switch (type) {
     case 'SAVE_TIME':
       return {
@@ -109,11 +109,7 @@ const settingsReducer = (state, action) => {
 };
 
 export const SettingsProvider = ({ children }) => {
-  const [
-    {
-      settings: { id, userId, ...settings },
-    },
-  ] = useUser();
+  const { settings: { id, userId, ...settings } = {} } = useUser()[0] || {};
 
   const [state, dispatch] = useReducer(settingsReducer, settings || {});
 
@@ -122,8 +118,9 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     if (pomodoros) {
       const { exp, totalTime, count } = pomodoros.reduce(
-        (acc, { exp, bonus, duration }) => {
-          if (curr.claimed) acc.exp = +(acc.exp + exp + bonus).toFixed(2);
+        (acc, { claimed, exp, bonus, duration }) => {
+          if (claimed) acc.exp = +(acc.exp + exp + bonus).toFixed(2);
+
           acc.totalTime += duration;
           acc.count++;
 
@@ -139,9 +136,10 @@ export const SettingsProvider = ({ children }) => {
   }, [pomodoros]);
 
   useEffect(() => {
-    if (state.change) {
+    if (state.change && userId) {
       const { change, ...settings } = state;
       const body = JSON.stringify(settings);
+      console.log('run');
 
       (async () => {
         const result = await fetch(`api/user/${userId}/settings`, {
@@ -149,7 +147,6 @@ export const SettingsProvider = ({ children }) => {
           headers: { 'Content-Type': 'application/json' },
           body,
         }).then((res) => res.json());
-
         if (result.error) console.error(result.error);
 
         dispatch({ type: 'CLEAR_CHANGE' });
