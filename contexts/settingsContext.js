@@ -18,7 +18,7 @@ const settingsReducer = (state, action) => {
     alarm,
     ticking,
   } = action;
-  console.log('run');
+
   switch (type) {
     case 'SAVE_TIME':
       return {
@@ -139,7 +139,6 @@ export const SettingsProvider = ({ children }) => {
     if (state.change && userId) {
       const { change, ...settings } = state;
       const body = JSON.stringify(settings);
-      console.log('run');
 
       (async () => {
         const result = await fetch(`api/user/${userId}/settings`, {
