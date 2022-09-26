@@ -78,8 +78,9 @@ model Settings {
   userId    String  @unique
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   time      Int?
-  totalTime Int?
-  count     Int?
+  exp       Float   @default(0)
+  totalTime Int     @default(0)
+  count     Int     @default(0)
   inSession Boolean @default(true)
   task      String?
   pomodoro  Int     @default(1800)
