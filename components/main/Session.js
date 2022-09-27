@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useUser } from '../../contexts/userContext';
 
-import { MdWbSunny } from 'react-icons/md';
+import { ImArrowUp } from 'react-icons/im';
+import { HiSun } from 'react-icons/hi';
 import styles from '../../styles/Session.module.scss';
 
-export default function Session({ session, timeClaimed, setPomodoros }) {
-  const [claimed, setClaimed] = useState();
+export default function Session({ session, claim, setPomodoros }) {
+  const [claimed, setClaimed] = useState(false);
+  const [exp, setExp] = useState({ exp: 0, bonus: 0 });
   const [random, setRandom] = useState(Math.random());
-  const [bonus, setBonus] = useState(0);
 
   const shimmerRef = useRef(false);
 
@@ -33,54 +34,42 @@ export default function Session({ session, timeClaimed, setPomodoros }) {
       clearTimeout(timeout);
     };
   }, []);
+  console.log(claim);
+  useEffect(() => {
+    if (!claimed && claim) onClaim();
+  }, [claimed, claim, onClaim]);
+
+  useEffect(() => {
+    if (claimed) {
+      const timeout = setTimeout(() => setPomodoros(), 4000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [claimed, setPomodoros]);
+
+  const onClaim = useCallback(async () => {
+    setClaimed(true);
+
+    const result = await fetch(`api/pomodoros/${session.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res) => res.json());
+
+    if (result.error) console.error(result.error);
+
+    if (!claim || claim.exp) {
+      const { exp, bonus } = claim.exp ? claim : session;
+
+      setExp({ exp, bonus });
+
+      const expGained = +(user.exp + exp + bonus).toFixed(2);
+
+      dispatch({ type: 'SET_EXP', exp: expGained });
+    }
+  }, [session, user, dispatch, claim]);
 
   const getRandInt = (max = 1, min = 0) =>
     Math.floor(Math.random() * (max - min + 1) + min);
-
-  const calculateExp = () => {
-    let { exp: expCurrent, expRate, level, expMin, expReq } = user;
-    let exp = 0;
-    let time = timeClaimed;
-    let expBonus = 0;
-
-    for (let i = 0; i < minutes; i++) {
-      exp += expRate * (1 + Math.floor(time / 5) * 0.01);
-
-      time++;
-
-      expBonus += getRandInt(100, 1) > 95 ? level : 0;
-
-      if (expCurrent + exp >= expMin + expReq) {
-        level++;
-        expRate = 1 + level / 5;
-        expMin += expReq;
-        expReq = Math.ceil(expReq * 1.1);
-      }
-    }
-
-    setBonus(+expBonus.toFixed(2));
-
-    return +exp.toFixed(2);
-  };
-
-  const onClaim = async () => {
-    const expClaimed = calculateExp();
-
-    setClaimed(expClaimed);
-
-    const expGained = user.exp + expClaimed + bonus;
-
-    // dispatch({ type: 'SET_EXP', exp: expGained });
-    // const result = await fetch(`api/pomodoros/${session.id}`, {
-    //   method: 'PUT',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({expGained})
-    // }).then((res) => res.json());
-
-    // if (result.error) console.error(result.error);
-
-    setPomodoros();
-  };
 
   const animation = claimed
     ? `
@@ -110,12 +99,12 @@ export default function Session({ session, timeClaimed, setPomodoros }) {
 
   return (
     <>
-      <style children={animation} />
+      <style>{animation}</style>
       <div
         className={styles.session}
         onClick={onClaim}
         style={{
-          top: claimed ? '105%' : `${getRandInt(100)}%`,
+          top: claimed ? '100%' : `${getRandInt(80)}%`,
           left: claimed
             ? `calc(50% - ${size / 2}rem)`
             : `min(${getRandInt(100)}%, 100% - ${size}rem)`,
@@ -134,10 +123,24 @@ export default function Session({ session, timeClaimed, setPomodoros }) {
           transition: `all ${claimed ? 2 : 30}s cubic-bezier(0.65, 0, 0.35, 1)`,
         }}
       >
-        <MdWbSunny />
+        <HiSun />
       </div>
-      {claimed && <span className={styles.exp}>+{claimed} exp</span>}
-      {bonus !== 0 && <span className={styles.bonus}>bonus {bonus} exp</span>}
+
+      {claimed && (
+        <>
+          {exp.exp !== 0 && (
+            <span className={styles.exp}>
+              <ImArrowUp /> {exp.exp} EXP
+            </span>
+          )}
+
+          {exp.bonus !== 0 && (
+            <span className={styles.bonus}>
+              <ImArrowUp /> {exp.bonus} BONUS EXP
+            </span>
+          )}
+        </>
+      )}
     </>
   );
 }
