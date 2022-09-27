@@ -22,7 +22,7 @@ export default function Overview({ user: { id, tasks: data, streak } }) {
         <Stat stat={completedTaskCount} label='task' />
         <Stat stat={count} label='session' />
         <Stat stat={Math.floor(totalTime / 60)} label='minute' />
-        <Stat stat={exp} label='exp' pluralize={false} />
+        <Stat stat={exp} label='exp' singular />
         <Stat stat={streak} label='non-zero day' />
       </div>
 
