@@ -13,9 +13,7 @@ export default function Garden({ user }) {
   const [selected, setSelected] = useState({ label: 'Today', value: today });
   const [options, setOptions] = useState([]);
 
-  const { pomodoros } = usePomodoros(user.id, 'all', {
-    revalidateOnMount: true,
-  });
+  const { pomodoros } = usePomodoros(user.id, 'all');
 
   useEffect(() => {
     if (pomodoros) {
@@ -27,17 +25,13 @@ export default function Garden({ user }) {
           if (!curr.claimed && isUnique) {
             acc.push({
               label:
-                date === today
-                  ? 'Today'
-                  : format(parseISO(date), 'MMM do yyyy'),
+                date === today ? 'Today' : format(parseISO(date), 'MMM d yyyy'),
               value: date,
             });
           }
 
           return acc;
         }, []);
-
-        setSelected(options[0]);
 
         return options;
       });
