@@ -1,4 +1,4 @@
-import Timer from '../components/ui/Timer';
+import Timer from '../components/main/Timer';
 import Stat from '../components/ui/Stat';
 import { useSettings } from '../contexts/settingsContext';
 
