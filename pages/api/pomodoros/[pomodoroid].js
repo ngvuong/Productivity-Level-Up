@@ -7,14 +7,12 @@ export default async function handler(req, res) {
 
   try {
     const { pomodoroid } = req.query;
+    const { date } = req.body;
+    const where = date && pomodoroid === 'date' ? { date } : { id: pomodoroid };
 
     await prisma.pomo.update({
-      where: {
-        id: pomodoroid,
-      },
-      data: {
-        claimed: true,
-      },
+      where,
+      data: { claimed: true },
     });
 
     return res.status(200).json({ success: true });
