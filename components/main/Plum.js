@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Stat from '../ui/Stat';
 import Session from './Session';
 import usePomodoros from '../../hooks/usePomodoros';
+import { useUser } from '../../contexts/userContext';
 
 import { GiFruitTree } from 'react-icons/gi';
 import styles from '../../styles/Plum.module.scss';
@@ -9,6 +10,8 @@ import styles from '../../styles/Plum.module.scss';
 export default function Plum({ userId, date }) {
   const [plum, setPlum] = useState();
   const [claim, setClaim] = useState(false);
+
+  const [{ exp: currentExp }, dispatch] = useUser();
 
   const { pomodoros, setPomodoros } = usePomodoros(userId, date);
 
@@ -51,6 +54,32 @@ export default function Plum({ userId, date }) {
       );
     }
   }, [pomodoros]);
+
+  const claimTime = async (session) => {
+    const { id, exp, bonus } = session || {
+      id: 'date',
+      exp: unclaimedExp,
+      bonus: unclaimedBonus,
+    };
+    const body = !session && JSON.stringify({ date });
+    const result = await fetch(`api/pomodoros/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      ...(body && { body }),
+    }).then((res) => res.json());
+
+    if (result.error) console.error(result.error);
+
+    if (!claim || claim.exp) {
+      const { exp, bonus } = claim.exp ? claim : session;
+
+      setExp({ exp, bonus });
+
+      const expGained = +(currentExp + exp + bonus).toFixed(2);
+
+      dispatch({ type: 'SET_EXP', exp: expGained });
+    }
+  };
 
   return (
     <div className={styles.plum}>
