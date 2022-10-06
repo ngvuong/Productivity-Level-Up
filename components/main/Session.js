@@ -47,26 +47,26 @@ export default function Session({ session, claim, setPomodoros }) {
     }
   }, [claimed, setPomodoros]);
 
-  const onClaim = useCallback(async () => {
-    setClaimed(true);
+  // const onClaim = useCallback(async () => {
+  //   setClaimed(true);
 
-    const result = await fetch(`api/pomodoros/${session.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    }).then((res) => res.json());
+  //   const result = await fetch(`api/pomodoros/${session.id}`, {
+  //     method: 'PUT',
+  //     headers: { 'Content-Type': 'application/json' },
+  //   }).then((res) => res.json());
 
-    if (result.error) console.error(result.error);
+  //   if (result.error) console.error(result.error);
 
-    if (!claim || claim.exp) {
-      const { exp, bonus } = claim.exp ? claim : session;
+  //   if (!claim || claim.exp) {
+  //     const { exp, bonus } = claim.exp ? claim : session;
 
-      setExp({ exp, bonus });
+  //     setExp({ exp, bonus });
 
-      const expGained = +(user.exp + exp + bonus).toFixed(2);
+  //     const expGained = +(user.exp + exp + bonus).toFixed(2);
 
-      dispatch({ type: 'SET_EXP', exp: expGained });
-    }
-  }, [session, user, dispatch, claim]);
+  //     dispatch({ type: 'SET_EXP', exp: expGained });
+  //   }
+  // }, [session, user, dispatch, claim]);
 
   const getRandInt = (max = 1, min = 0) =>
     Math.floor(Math.random() * (max - min + 1) + min);
